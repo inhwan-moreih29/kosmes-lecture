@@ -1,0 +1,24 @@
+# --- Python / uv ---
+.venv/
+__pycache__/
+*.pyc
+.python-version
+
+# --- 학습 산출물 (용량 큼) ---
+01-model/runs/
+*.pt
+!01-model/weights/.gitkeep
+
+# --- 모델 가중치 (onnx도 용량 커서 git 제외, 별도 보관) ---
+*.onnx
+!02-app/models/.gitkeep
+
+# --- PyInstaller 배포 산출물 ---
+02-app/build/
+02-app/dist/
+
+# --- 데이터 (이미 로컬 확보, git 추적 안 함) ---
+data/
+
+# --- OS ---
+.DS_Store

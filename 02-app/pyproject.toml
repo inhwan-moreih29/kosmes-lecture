@@ -1,0 +1,27 @@
+[project]
+name = "kosmes-02-app"
+version = "0.1.0"
+description = "2교시 - 비전 모델 영상 추론 교보재 앱 (PySide6 + onnxruntime). 전후처리 노브 시연용."
+requires-python = ">=3.11"
+dependencies = [
+    "pyside6>=6.7.0",
+    "onnxruntime>=1.18.0",   # torch 미포함 -> 패키징 경량
+    "opencv-python>=4.10.0",
+    "numpy>=1.26.0",
+]
+
+[dependency-groups]
+dev = ["pyinstaller>=6.10.0"]
+
+[project.scripts]
+kosmes-app = "app.main:main"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]

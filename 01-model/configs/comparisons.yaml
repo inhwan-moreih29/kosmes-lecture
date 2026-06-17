@@ -1,0 +1,28 @@
+# 1교시 비교 데모 정의 (docs/lecture-notes.md 30~33줄 기준)
+# train.py 가 이 파일을 읽어 각 비교군 모델을 학습 -> weights/<name>.pt 로 저장.
+# 공통 베이스는 base 에, 비교군별로 덮어쓸 값만 groups 에 적는다.
+
+base:
+  data: screw          # prepare/mvtec_to_yolo.py 가 만든 data.yaml 의 카테고리
+  epochs: 50
+  imgsz: 640
+  model: yolo11s.pt     # 기본 백본
+
+groups:
+  # B(1순위): 증강 없음 vs 있음 — "틀린 이미지를 증강 모델로 다시 추론하면 맞음"
+  - name: noaug
+    augment: false
+  - name: aug
+    augment: true
+
+  # A: 데이터 10장 vs 100장 — 직관적, 임팩트 큼
+  - name: n10
+    max_train_images: 10
+  - name: n100
+    max_train_images: 100
+
+  # C(여유 시): 작은 vs 큰 모델 = 속도 vs 정확도 (2교시 복선)
+  - name: small
+    model: yolo11n.pt
+  - name: large
+    model: yolo11l.pt
