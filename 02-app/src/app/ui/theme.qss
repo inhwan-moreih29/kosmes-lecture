@@ -1,0 +1,19 @@
+/* qdarktheme('dark') 위에 얹는 오버레이.
+   체크박스/콤보/슬라이더/스크롤 등 기본 위젯은 qdarktheme 가 처리한다.
+   여기서는 이 앱 고유의 의미색·강조만 손본다(프로젝터 가독성). */
+
+/* 영상 뷰 */
+QLabel#videoView {
+    background-color: #000000;
+    border: 1px solid #33343d;
+    border-radius: 6px;
+}
+
+/* 하단 상태바 — 경보 on/off 글자 크기를 동일하게(18px) 유지해 토글 시
+   상태바 높이가 변하지 않게 한다(왼쪽 영상 뷰 리플로우·흔들림 방지). */
+QLabel#statusValue { font-size: 16px; font-weight: 700; }
+QLabel#alarmOn  { color: #ff5252; font-size: 18px; font-weight: 800; min-height: 24px; }
+QLabel#alarmOff { color: #6ad08b; font-size: 18px; font-weight: 700; min-height: 24px; }
+
+/* 슬라이더 옆 실수치 */
+QLabel#knobValue { color: #6aa6ff; font-weight: 700; }

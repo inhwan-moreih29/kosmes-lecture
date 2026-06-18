@@ -5,9 +5,10 @@ description = "2교시 - 비전 모델 영상 추론 교보재 앱 (PySide6 + on
 requires-python = ">=3.11"
 dependencies = [
     "pyside6>=6.7.0",
-    "onnxruntime>=1.18.0",   # torch 미포함 -> 패키징 경량
+    "onnxruntime>=1.18.0", # torch 미포함 -> 패키징 경량
     "opencv-python>=4.10.0",
     "numpy>=1.26.0",
+    "pyqtdarktheme>=2.1.0",
 ]
 
 [dependency-groups]
