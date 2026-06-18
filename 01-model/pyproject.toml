@@ -7,7 +7,22 @@ dependencies = [
     "ultralytics>=8.3.0",
     "onnx>=1.16.0",
     "onnxslim>=0.1.34",
+    # torch 를 직접 의존성으로 둬야 아래 tool.uv.sources 의 cu128 핀이 적용된다
+    # (전이 의존성이면 source 핀이 무시됨).
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
 ]
 
 # 학습 전용 프로젝트. torch가 끌려와 무겁다 (수백 MB~GB).
 # 02-app 과 venv 를 절대 공유하지 말 것 — 패키징 경량화 목적.
+
+# torch 는 CUDA 12.8 빌드로 고정 (드라이버 570 = CUDA 12.8 지원).
+# 기본 PyPI 는 cu130 을 주는데 드라이버가 못 따라가 GPU 인식 실패하므로 index 고정.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }

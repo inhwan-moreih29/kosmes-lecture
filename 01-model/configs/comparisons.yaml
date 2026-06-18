@@ -3,8 +3,8 @@
 # 공통 베이스는 base 에, 비교군별로 덮어쓸 값만 groups 에 적는다.
 
 base:
-  data: screw          # prepare/mvtec_to_yolo.py 가 만든 data.yaml 의 카테고리
-  epochs: 50
+  data: screw          # 결함이 작고 다양 -> 난이도 있는 현실적 예시 (불량 119장, train 풀 124)
+  epochs: 100          # 소규모 데이터라 충분히 수렴시킴
   imgsz: 640
   model: yolo11s.pt     # 기본 백본
 
@@ -15,14 +15,19 @@ groups:
   - name: aug
     augment: true
 
-  # A: 데이터 10장 vs 100장 — 직관적, 임팩트 큼
+  # A: 데이터 양 10/50/100장 — 중간 단계 포함해 "데이터가 성능을 가른다" 곡선으로
   - name: n10
     max_train_images: 10
+  - name: n50
+    max_train_images: 50
   - name: n100
     max_train_images: 100
 
-  # C(여유 시): 작은 vs 큰 모델 = 속도 vs 정확도 (2교시 복선)
-  - name: small
+  # C: 모델 크기 n/s/m/l 전부 — 속도 vs 정확도 (2교시 복선)
+  # 's' 지점은 noaug(yolo11s, 풀데이터, 증강없음)와 동일 조건이라 보고서에서 noaug 를 재사용.
+  - name: size_n
     model: yolo11n.pt
-  - name: large
+  - name: size_m
+    model: yolo11m.pt
+  - name: size_l
     model: yolo11l.pt
