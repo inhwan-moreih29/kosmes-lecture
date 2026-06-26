@@ -1,0 +1,147 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>2교시 강의 시나리오 — 내부 논의용</title>
+<style>
+:root{--ink:#10161f;--mut:#475066;--line:#d7deea;--accent:#0e8a6a;--soft:#ecf7f3;}
+*{box-sizing:border-box;}
+html{background:#fff;}
+body{font-family:-apple-system,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+ color:var(--ink);background:#fff;max-width:900px;margin:0 auto;padding:32px 22px 80px;
+ line-height:1.7;font-size:16px;}
+h1{font-size:26px;margin:0 0 4px;color:#0b1118;}
+.sub{color:var(--mut);margin:0 0 20px;font-size:15px;}
+.meta{display:flex;gap:16px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);
+ border-radius:10px;padding:13px 16px;margin:0 0 24px;font-size:14.5px;}
+.meta b{color:var(--accent);}
+.flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 26px;font-size:13.5px;color:var(--mut);}
+.flow .step{background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-weight:600;color:var(--ink);}
+.flow .arr{color:var(--mut);font-weight:800;}
+section{margin:0 0 8px;}
+h2{font-size:18px;border-bottom:2px solid var(--line);padding-bottom:7px;margin:30px 0 12px;
+ color:#0b1118;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.tm{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;
+ border-radius:7px;padding:2px 9px;font-size:14px;font-weight:700;min-width:62px;}
+.hb{display:inline-block;background:#e1f3ec;color:var(--accent);font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;}
+.ev{display:inline-block;background:#e7eefc;color:#1746c4;font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;}
+p{margin:8px 0;}
+.talk{background:#e1f3ec;border-left:4px solid var(--accent);padding:9px 13px;border-radius:0 6px 6px 0;font-size:15px;}
+ul,ol{margin:8px 0 8px 2px;padding-left:22px;}li{margin:6px 0;}
+code{background:#f1f4fa;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13.5px;color:#1746c4;font-family:'SF Mono',Menlo,Consolas,monospace;}
+/* 노브 카드 */
+.knobs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+.knob{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:12px 15px;}
+.knob .kt{font-weight:800;font-size:14.5px;color:#0b1118;margin-bottom:3px;}
+.knob .kd{font-size:13.5px;color:var(--mut);}
+.knob .kd b{color:var(--accent);}
+.grp{font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--accent);text-transform:uppercase;margin:18px 0 2px;}
+.mission{background:#fdeef4;border:1px solid #e7a0c0;border-radius:10px;padding:14px 18px;margin:18px 0;font-size:15px;}
+.mission .h{font-weight:800;color:#a4326a;display:block;margin-bottom:4px;}.mission b{color:#a4326a;}
+.caveat{background:#fff5e6;border:1px solid #e0a45c;border-radius:10px;padding:13px 17px;margin:24px 0 18px;font-size:14.5px;}
+.caveat .h{font-weight:800;color:#9a4d00;display:block;margin-bottom:4px;}.caveat b{color:#9a4d00;}
+.discuss{background:#e7eefc;border:1px solid #9fbcff;border-radius:10px;padding:15px 19px;margin:24px 0;}
+.discuss h2{border:none;margin:0 0 8px;color:#1746c4;}
+footer{color:var(--mut);font-size:12.5px;margin-top:40px;border-top:1px solid var(--line);padding-top:12px;}
+@media (max-width:640px){.knobs{grid-template-columns:1fr;}}
+</style></head><body>
+
+<h1>2교시 강의 시나리오 <span style="font-size:14px;color:#475066;font-weight:normal;">(내부 논의용 초안)</span></h1>
+<p class="sub">중소제조업 비전 AI 실습 · "모델이 절반, 전후처리가 절반" · 영상 추론 교보재 앱 핸즈온 → RISA 연결</p>
+
+<div class="meta">
+<span><b>대상</b> 중소제조업 실무자</span>
+<span><b>시간</b> 40분 (3타임 중 2타임)</span>
+<span><b>도구</b> 직접 만든 교보재 앱 (PySide6)</span>
+<span><b>핵심</b> "모델은 1교시에 봤다 — 영상에선 전후처리가 절반"</span>
+</div>
+
+<div class="flow">
+<span class="step">파이프라인·앱 지도</span><span class="arr">→</span>
+<span class="step">노브 투어</span><span class="arr">→</span>
+<span class="step">핸즈온 미션</span><span class="arr">→</span>
+<span class="step">RISA 연결</span>
+</div>
+
+<section><h2><span class="tm">0–5</span> 도입 — 파이프라인 + 앱 지도</h2>
+<p>1교시는 <b>모델 그 자체</b>(정지 이미지·임계값)였다. 2교시는 그 모델을 <b>영상에 흘려보내 "시스템"으로</b> 만든다. 화면 한 장으로 파이프라인을 박는다: <code>입력 → 전처리 → 모델 → 후처리 → 판정</code>.</p>
+<p class="talk">멘트: "모델은 박스를 뱉을 뿐이다. '3명이 위험구역에 10초 있으면 경보' 같은 <u>현장의 판단</u>은 전부 전후처리가 만든다. 오늘 만질 노브가 바로 그 절반이다."</p>
+<p><b>앱 위치 설정</b>: 이건 RISA가 <i>아니다</i>. "제품 내부를 까보는 학습용 도구" — RISA는 완제품, 이 앱은 그 안에서 도는 원리를 손으로 만지게 노출한 것. 왼쪽 영상 뷰 + 오른쪽 노브 패널 구조를 한 번 훑는다.</p>
+</section>
+
+<section><h2><span class="tm">5–16</span> 강사 빠른 투어 — 노브가 뭘 바꾸나 <span class="hb">시연</span></h2>
+<p>각 노브를 2~3분씩, "끄고 켜서 화면이 어떻게 변하나"만 보여준다. 설명보다 <b>직접 밀어 보이는</b> 게 핵심. 노브는 세 묶음.</p>
+
+<div class="grp">묶음 ① 오탐을 깎는 3종 — 출력·시간·크기</div>
+<div class="knobs">
+<div class="knob"><div class="kt">신뢰도 임계값</div><div class="kd"><b>출력 레벨.</b> 1교시 복습. 낮추면 다 잡지만 헛검출↑, 높이면 깔끔하지만 놓침↑.</div></div>
+<div class="knob"><div class="kt">디바운싱</div><div class="kd"><b>시간 레벨.</b> "<b>N프레임 연속</b>으로 잡혀야 인정" — 한 프레임이라도 놓치면 카운트 리셋. 순간 깜빡임(오탐) 제거, 대가는 반응 지연.</div></div>
+<div class="knob"><div class="kt">최소 크기 필터</div><div class="kd"><b>크기 레벨.</b> 박스 <b>높이가 화면의 N% 미만</b>이면 버린다. 멀리 작게 잡힌 잡음 제거. 슬라이더 조절 시 화면 좌하단에 기준 박스를 잠깐 띄워 직관적으로 보여줌.</div></div>
+<div class="knob"><div class="kd" style="align-self:center">→ "임계값·시간·크기, <b>세 각도</b>로 오탐을 깎는다." 한 노브로 안 되던 헛검출이 조합하면 사라진다.</div></div>
+</div>
+
+<div class="grp">묶음 ② 속도 레버 — 실시간성 트레이드오프</div>
+<div class="knobs">
+<div class="knob"><div class="kt">프레임 스킵 (1/N)</div><div class="kd">N프레임당 1번만 추론. <b>FPS는 오르지만</b> 판정이 듬성듬성. 표시 속도(재생)와 처리 속도(FPS)는 별개임을 짚는다.</div></div>
+<div class="knob"><div class="kt">입력 리사이즈 (imgsz)</div><div class="kd">모델 입력을 줄이면 빨라지고 작은 객체를 놓친다. 1교시 "큰 모델은 느리다"의 회수.</div></div>
+<div class="knob"><div class="kt">최대 속도(언락)</div><div class="kd">재생 페이싱을 풀어 <b>가능한 한 빠르게</b> 처리. 노브가 FPS에 주는 영향을 적나라하게 본다. (재생바 속도 버튼 옆)</div></div>
+</div>
+
+<div class="grp">묶음 ③ 위험구역(ROI) + 경보 규칙 — RISA 직결</div>
+<div class="knobs">
+<div class="knob"><div class="kt">위험구역(ROI) 그리기</div><div class="kd">화면에 폴리곤을 직접 찍어 위험구역을 지정(첫 점 다시 클릭/더블클릭=완성). 다시 그리기·지우기 지원.</div></div>
+<div class="knob"><div class="kt">진입 기준 (겹침)</div><div class="kd">박스가 ROI에 <b>얼마나 겹쳐야</b> 침입으로 볼지. "닿으면(any)"부터 "면적의 N%"까지. 발만 걸친 통행 vs 실제 진입을 가른다.</div></div>
+<div class="knob"><div class="kt">경보 규칙 — 인원/체류</div><div class="kd">ROI 안 <b>인원 ≥ N명</b> · <b>체류 ≥ N초</b>(추적 ID로 누적). 두 조건을 <b>OR / AND</b>로 직접 선택.</div></div>
+<div class="knob"><div class="kt">시각화 토글 + 스냅샷</div><div class="kd">박스·ID·신뢰도·ROI 표시 on/off. 경보 순간을 이미지로 저장.</div></div>
+</div>
+<p class="talk">멘트: "여기까지가 RISA가 현장에서 하는 일이다. 우리는 그 노브를 다 밖으로 빼놨을 뿐. 이제 여러분이 직접 맞춰본다."</p>
+</section>
+
+<section><h2><span class="tm">16–35</span> 핸즈온 미션 — 직접 노브를 맞춰라 <span class="hb">실습</span></h2>
+<p>수강생이 같은 영상에 노브를 조합한다. 강사 설명이 아니라 <b>손이 시간을 채우는</b> 구간(19분). 막히면 완성본/힌트 배포로 흐름 유지.</p>
+<div class="mission">
+<span class="h">🎯 미션</span>
+이 영상에서 <b>헛경보 없이</b>, 복합 규칙 — <b>위험구역에 동시 3명 이상</b> <u>또는</u> <b>한 명이라도 10초 이상 체류</b> — 이 제대로 울리도록 노브를 맞춰라.
+</div>
+<p><b>왜 한 노브로는 안 되나(미션의 설계 의도)</b>:</p>
+<ul>
+<li>임계값만 올리면 → 진짜 사람도 놓쳐 경보가 안 울린다.</li>
+<li>ROI만 그리면 → 스쳐 지나가는 통행에도 깜빡 경보(헛경보).</li>
+<li>디바운싱 + 진입 겹침 기준을 같이 써야 → "잠깐 닿음"과 "실제 체류"가 갈린다.</li>
+<li>OR/AND 선택으로 → "사람이 많거나 / 오래 있거나"를 현장 규칙에 맞게 조립.</li>
+</ul>
+<p>→ <b>"오탐 3종 × 위험판정"을 조합해야 목표가 잡힌다</b>는 걸 손으로 깨닫게 하는 게 핵심.</p>
+</section>
+
+<section><h2><span class="tm">35–40</span> 정리 → RISA 연결</h2>
+<ul>
+<li><b>모델이 절반, 전후처리가 절반</b> — 같은 모델 출력도 노브 조합에 따라 쓸모가 갈린다.</li>
+<li><b>현장의 판단은 후처리가 만든다</b> — 임계값·시간·크기·구역·규칙은 전부 사람이 정한다.</li>
+<li>"이 원리들이 제품 안에 세팅돼 <b>24시간 자동으로 도는 게 RISA</b>." (여유 시 추적/카운팅 추가 시연)</li>
+</ul>
+<p class="talk">다음 복선: "보는 AI는 여기까지. 3교시는 <u>판단하는 AI</u> — 데이터에 직접 묻는다."</p>
+</section>
+
+<div class="caveat">
+<span class="h">⚠ 강사용 단서 (슬라이드엔 올리지 말 것)</span>
+<ul>
+<li><b>앱 ≠ RISA</b>를 반드시 명확히. "제품 내부를 까본 학습용 도구"로 프레이밍해야 제품 홍보톤·오해를 피한다.</li>
+<li><b>라이브 리스크</b>: 앱이 강의장에서 죽을 때 대비 <b>백업 녹화 클립</b> 필수. 추론은 CPU(onnxruntime)라 무거운 영상은 미리 FPS 확인.</li>
+<li>기획서의 노브 셋과 실제 구현이 일부 다름 — <b>디바운싱은 "N프레임 연속 확인"(streak)</b>, <b>최소크기는 박스 높이 %</b>, <b>ROI 진입은 겹침 면적 비율</b>, 경보는 <b>OR/AND 사용자 선택</b>. 시연·지문은 구현 기준으로.</li>
+<li>샘플 영상은 Mendeley "Safe/Unsafe Behaviours"(제조현장 고정 IP캠, CC BY 4.0) 기준. ROI·체류·카운팅에 적합한 클립을 미리 골라둘 것.</li>
+<li>수준 편차(1~3) 대응: 완성본 설정·단계별 힌트를 미리 배포, 빠른 수강생용 심화(예: AND로 바꿔 더 까다롭게 / 진입 겹침을 올려 통행 무시).</li>
+</ul>
+</div>
+
+<div class="discuss">
+<h2>내부 논의 포인트</h2>
+<ul>
+<li><b>투어 11분(5–16)에 노브 9개</b>가 빡빡하지 않은가 — 묶음 ①②는 빠르게, ③(ROI/경보)에 시간을 몰아줄지.</li>
+<li><b>미션 영상 확정</b>: 동시 3명·10초 체류가 자연스럽게 나오는 클립이 있는가, 아니면 미션 수치를 영상에 맞춰 조정할지.</li>
+<li><b>수강생 배포 방식</b>: 실행파일(PyInstaller) vs 강사 화면 시연 + 일부만 직접. onefile 빌드 시 QtSvg·qdarktheme 데이터 포함 필요(이미 식별됨).</li>
+<li><b>1교시 회수 포인트</b>(임계값·큰 모델은 느리다·분포 밖 실패→밝기/대비)를 어디까지 명시적으로 연결할지.</li>
+</ul>
+</div>
+
+<footer>2교시 전용 초안 · 기존 v3의 40분 핸즈온 골격 + 실제 구현된 교보재 앱(PySide6/onnxruntime) 노브 기준 · 샘플영상 Mendeley(CC BY 4.0), RISA 연결</footer>
+
+</body></html>
