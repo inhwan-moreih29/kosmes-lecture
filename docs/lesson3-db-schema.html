@@ -1,0 +1,303 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>3교시 가상 회사 DB 설계 — 내부 논의용</title>
+<style>
+:root{--ink:#10161f;--mut:#475066;--line:#d7deea;--accent:#0e8a6a;--soft:#ecf7f3;
+ --blue:#1746c4;--blsoft:#e7eefc;--pk:#9a4d00;--fk:#1746c4;}
+*{box-sizing:border-box;}
+html{background:#fff;}
+body{font-family:-apple-system,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+ color:var(--ink);background:#fff;max-width:980px;margin:0 auto;padding:32px 22px 80px;
+ line-height:1.7;font-size:16px;}
+h1{font-size:26px;margin:0 0 4px;color:#0b1118;}
+.sub{color:var(--mut);margin:0 0 20px;font-size:15px;}
+.meta{display:flex;gap:16px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);
+ border-radius:10px;padding:13px 16px;margin:0 0 24px;font-size:14.5px;}
+.meta b{color:var(--accent);}
+h2{font-size:18px;border-bottom:2px solid var(--line);padding-bottom:7px;margin:34px 0 12px;
+ color:#0b1118;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+h3{font-size:15px;margin:18px 0 6px;color:#0b1118;}
+p{margin:8px 0;}
+.talk{background:#e1f3ec;border-left:4px solid var(--accent);padding:9px 13px;border-radius:0 6px 6px 0;font-size:15px;}
+ul,ol{margin:8px 0 8px 2px;padding-left:22px;}li{margin:6px 0;}
+code{background:#f1f4fa;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;color:var(--blue);font-family:'SF Mono',Menlo,Consolas,monospace;}
+.grp{font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--accent);text-transform:uppercase;margin:22px 0 8px;}
+/* 테이블 카드 (ERD) */
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:10px 0;}
+.tbl{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;}
+.tbl > .nm{background:#0b1118;color:#fff;font-weight:800;font-size:13.5px;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;}
+.tbl > .nm .ko{color:#9fc7ff;font-weight:600;font-size:12px;}
+.tbl table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.tbl td{padding:4px 12px;border-top:1px solid #eef1f7;vertical-align:top;}
+.tbl td.c{color:var(--ink);font-family:'SF Mono',Menlo,Consolas,monospace;white-space:nowrap;}
+.tbl td.t{color:var(--mut);font-size:11.5px;text-align:right;white-space:nowrap;}
+.bpk{color:var(--pk);font-weight:800;}
+.bfk{color:var(--fk);font-weight:700;}
+.tag{display:inline-block;font-size:9.5px;font-weight:800;border-radius:4px;padding:1px 4px;margin-left:4px;vertical-align:middle;}
+.tag.pk{background:#fff0db;color:var(--pk);}
+.tag.fk{background:var(--blsoft);color:var(--fk);}
+.fam{background:#f6f8fc;border:1px solid var(--line);border-radius:9px;padding:12px 16px;margin:10px 0;font-size:14px;}
+.fam code{font-size:12.5px;}
+.skutable{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0;}
+.skutable th,.skutable td{border:1px solid var(--line);padding:5px 9px;text-align:left;}
+.skutable th{background:var(--soft);font-size:12px;color:var(--accent);}
+.skutable code{background:none;border:none;padding:0;}
+.insight{background:#fdeef4;border:1px solid #e7a0c0;border-radius:10px;padding:15px 18px;margin:14px 0;}
+.insight .h{font-weight:800;color:#a4326a;display:block;margin-bottom:6px;}.insight b{color:#a4326a;}
+.bait{background:#fff5e6;border:1px solid #e0a45c;border-radius:10px;padding:13px 17px;margin:14px 0;font-size:14.5px;}
+.bait .h{font-weight:800;color:#9a4d00;display:block;margin-bottom:4px;}.bait b{color:#9a4d00;}
+.discuss{background:var(--blsoft);border:1px solid #9fbcff;border-radius:10px;padding:15px 19px;margin:24px 0;}
+.discuss h2{border:none;margin:0 0 8px;color:var(--blue);}
+.qtable{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0;}
+.qtable th,.qtable td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+.qtable th{background:var(--soft);color:var(--accent);font-size:12.5px;}
+.chip{display:inline-block;background:var(--blsoft);color:var(--blue);font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;}
+footer{color:var(--mut);font-size:12.5px;margin-top:40px;border-top:1px solid var(--line);padding-top:12px;}
+@media (max-width:680px){.tables{grid-template-columns:1fr;}}
+</style></head><body>
+
+<h1>3교시 가상 회사 DB 설계 <span style="font-size:14px;color:#475066;font-weight:normal;">(구축 완료 — 현 DB 기준)</span></h1>
+<p class="sub">M.AX 에이전트 시연용 PostgreSQL · "판단하는 AI가 사내 데이터를 읽고 결정한다" · 1·2교시(보는 AI) → 3교시(판단하는 AI) 마무리</p>
+
+<div class="meta">
+<span><b>회사</b> 한빛정밀 (가상 정밀부품 제조사)</span>
+<span><b>DB</b> PostgreSQL 16 (읽기전용, SELECT만)</span>
+<span><b>테이블</b> 16개 (마스터 6 · 운영 5 · 영업/재고 5)</span>
+<span><b>기간</b> 2025-01-01 ~ 2026-06-30 (18개월) · 기준일 2026-06-30</span>
+<span><b>총 행수</b> 약 16,000행 (생산 5,045 · 검사 4,480 중심)</span>
+<span><b>설계 원칙</b> 평범한 ERP/MES 스키마 — 정답을 테이블에 새기지 않고 <b>조인으로 발견</b></span>
+</div>
+
+<section>
+<h2>설계 원칙 (먼저 합의할 것)</h2>
+<ul>
+<li><b>안전 데이터를 특별 취급하지 않는다.</b> RISA(2교시) 카메라가 뱉는 위험구역 경보도 <code>safety_events</code>라는 <b>평범한 운영 로그 한 개</b>로만 둔다. 스키마를 안전 중심으로 짜지 않고, 다른 운영 테이블과 동등하게 섞어 둔다 → MAX가 조인하다 "스스로" 연결을 찾게 한다.</li>
+<li><b>현실적인 제조사 스키마.</b> 기준정보(고객·공급사·제품·라인·설비) + 트랜잭션(생산·검사·자재로트·설비정지·안전) + 영업/재고. 어디서나 보는 ERP/MES 형태.</li>
+<li><b>정답을 한 테이블에 적어두지 않는다.</b> "라인3이 문제"라고 적힌 컬럼은 없다. 생산↔불량↔설비정지↔안전경보↔매출을 <b>조인하고 시계열로 봐야</b> 드러나게 데이터를 심는다.</li>
+<li><b>치수별 품번.</b> 정밀부품답게 패밀리 + 치수 variant마다 고유 SKU(품번)를 부여 → 실제 제조사 품번 체계 느낌.</li>
+</ul>
+</section>
+
+<section>
+<h2>제품 / 품번 체계</h2>
+<p>한빛정밀은 5개 부품 패밀리를 생산. 같은 패밀리라도 <b>치수가 다르면 다른 품번(SKU)</b>이다. 품번 = <code>패밀리코드 - 주치수 - 부치수 [- 공차등급]</code>.</p>
+<div class="fam">
+<b>패밀리 코드</b> &nbsp;
+<code>SH</code> 정밀 샤프트 ·
+<code>BU</code> 부싱 ·
+<code>PN</code> 커넥터 핀 ·
+<code>GR</code> 스퍼 기어 ·
+<code>VB</code> 밸브 바디
+</div>
+<table class="skutable">
+<tr><th>품번 (part_no)</th><th>패밀리</th><th>치수</th><th>공차등급</th><th>현재 단가(원)</th></tr>
+<tr><td><code>SH-08-040-IT6</code></td><td>정밀 샤프트</td><td>Ø8 × L40</td><td>IT6</td><td>1,840</td></tr>
+<tr><td><code>SH-08-060-IT6</code></td><td>정밀 샤프트</td><td>Ø8 × L60</td><td>IT6</td><td>2,090</td></tr>
+<tr><td><code>SH-10-060-IT5</code></td><td>정밀 샤프트</td><td>Ø10 × L60</td><td>IT5</td><td>2,630</td></tr>
+<tr><td><code>BU-12-08-IT7</code></td><td>부싱</td><td>OD12 / ID8</td><td>IT7</td><td>970</td></tr>
+<tr><td><code>GR-20-M1-IT6</code></td><td>스퍼 기어</td><td>Ø20 / M1</td><td>IT6</td><td>3,280</td></tr>
+</table>
+<p style="font-size:13px;color:var(--mut)">5개 패밀리 × 치수 variant = <b>총 14개 SKU</b> (위는 대표 5개). 현재 단가는 <code>products.unit_price</code>, 과거 단가는 <code>price_list</code>(연 단위 개정), 주문 시점 단가는 <code>order_items.unit_price</code>에 스냅샷.</p>
+<p class="talk">교육 포인트: 같은 "샤프트"라도 SKU가 여러 개 → "샤프트 매출"을 물으면 에이전트가 패밀리로 묶어야(GROUP BY family) 한다. 자연스러운 멀티턴/집계 소재.</p>
+</section>
+
+<section>
+<h2>테이블 구조 (ERD)</h2>
+<p><span class="tag pk">PK</span> 기본키 · <span class="tag fk">FK</span> 외래키. 16개 테이블, 3개 묶음. 모든 PK는 명시 적재용 plain <code>int</code>.</p>
+
+<div class="grp">묶음 ① 기준정보 (마스터)</div>
+<div class="tables">
+
+<div class="tbl"><div class="nm">product_families <span class="ko">부품 패밀리</span></div><table>
+<tr><td class="c">family_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">family_code</td><td class="t">text</td></tr>
+<tr><td class="c">name</td><td class="t">text</td></tr>
+<tr><td class="c">base_material</td><td class="t">text</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">products <span class="ko">제품(SKU)</span></div><table>
+<tr><td class="c">product_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">part_no</td><td class="t">text</td></tr>
+<tr><td class="c">family_id <span class="tag fk">FK</span></td><td class="t">→families</td></tr>
+<tr><td class="c">diameter_mm, length_mm</td><td class="t">numeric</td></tr>
+<tr><td class="c">tolerance_class</td><td class="t">text</td></tr>
+<tr><td class="c">tol_lower, tol_upper</td><td class="t">numeric</td></tr>
+<tr><td class="c">material_input_g</td><td class="t">numeric</td></tr>
+<tr><td class="c">unit_price</td><td class="t">numeric</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">customers <span class="ko">고객사</span></div><table>
+<tr><td class="c">customer_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">name</td><td class="t">text</td></tr>
+<tr><td class="c">industry</td><td class="t">text</td></tr>
+<tr><td class="c">country</td><td class="t">text</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">suppliers <span class="ko">자재 공급사</span></div><table>
+<tr><td class="c">supplier_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">name</td><td class="t">text</td></tr>
+<tr><td class="c">material_category</td><td class="t">text</td></tr>
+<tr><td class="c">country</td><td class="t">text</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">production_lines <span class="ko">생산 라인</span></div><table>
+<tr><td class="c">line_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">name</td><td class="t">text</td></tr>
+<tr><td class="c">location</td><td class="t">text</td></tr>
+<tr><td class="c">commissioned_date</td><td class="t">date</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">equipment <span class="ko">설비</span></div><table>
+<tr><td class="c">equipment_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">line_id <span class="tag fk">FK</span></td><td class="t">→lines</td></tr>
+<tr><td class="c">name, model</td><td class="t">text</td></tr>
+<tr><td class="c">install_date</td><td class="t">date</td></tr>
+<tr><td class="c">last_maintenance_date</td><td class="t">date</td></tr>
+</table></div>
+
+</div>
+
+<div class="grp">묶음 ② 운영 트랜잭션 (생산 현장)</div>
+<div class="tables">
+
+<div class="tbl"><div class="nm">material_lots <span class="ko">자재 입고 로트</span></div><table>
+<tr><td class="c">lot_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">supplier_id <span class="tag fk">FK</span></td><td class="t">→suppliers</td></tr>
+<tr><td class="c">material_grade</td><td class="t">text</td></tr>
+<tr><td class="c">received_date</td><td class="t">date</td></tr>
+<tr><td class="c">qty_kg</td><td class="t">numeric</td></tr>
+<tr><td class="c">qc_status</td><td class="t">text</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">production_runs <span class="ko">생산 실적(일별)</span></div><table>
+<tr><td class="c">run_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">line_id <span class="tag fk">FK</span></td><td class="t">→lines</td></tr>
+<tr><td class="c">product_id <span class="tag fk">FK</span></td><td class="t">→products</td></tr>
+<tr><td class="c">lot_id <span class="tag fk">FK</span></td><td class="t">→material_lots</td></tr>
+<tr><td class="c">run_date</td><td class="t">date</td></tr>
+<tr><td class="c">planned_qty, produced_qty</td><td class="t">int</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">quality_inspections <span class="ko">품질 검사(표본)</span></div><table>
+<tr><td class="c">inspection_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">run_id <span class="tag fk">FK</span></td><td class="t">→runs</td></tr>
+<tr><td class="c">inspected_at</td><td class="t">timestamptz</td></tr>
+<tr><td class="c">equipment_id <span class="tag fk">FK</span></td><td class="t">→equipment</td></tr>
+<tr><td class="c">result</td><td class="t">text</td></tr>
+<tr><td class="c">defect_type</td><td class="t">text</td></tr>
+<tr><td class="c">defect_qty</td><td class="t">int</td></tr>
+<tr><td class="c">measured_value, spec_target</td><td class="t">numeric</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">equipment_downtime <span class="ko">설비 정지 이력</span></div><table>
+<tr><td class="c">downtime_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">equipment_id <span class="tag fk">FK</span></td><td class="t">→equipment</td></tr>
+<tr><td class="c">start_ts, end_ts</td><td class="t">timestamptz</td></tr>
+<tr><td class="c">downtime_minutes</td><td class="t">int</td></tr>
+<tr><td class="c">reason</td><td class="t">text</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">safety_events <span class="ko">안전 경보 로그 (RISA)</span></div><table>
+<tr><td class="c">event_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">line_id <span class="tag fk">FK</span></td><td class="t">→lines</td></tr>
+<tr><td class="c">camera_id</td><td class="t">text</td></tr>
+<tr><td class="c">event_type</td><td class="t">text</td></tr>
+<tr><td class="c">severity</td><td class="t">text</td></tr>
+<tr><td class="c">detected_at</td><td class="t">timestamptz</td></tr>
+<tr><td class="c">duration_sec</td><td class="t">int</td></tr>
+</table></div>
+
+</div>
+
+<div class="grp">묶음 ③ 영업 / 재고</div>
+<div class="tables">
+
+<div class="tbl"><div class="nm">sales_orders <span class="ko">수주</span></div><table>
+<tr><td class="c">order_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">customer_id <span class="tag fk">FK</span></td><td class="t">→customers</td></tr>
+<tr><td class="c">order_date, due_date</td><td class="t">date</td></tr>
+<tr><td class="c">status</td><td class="t">text</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">order_items <span class="ko">수주 품목</span></div><table>
+<tr><td class="c">order_item_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">order_id <span class="tag fk">FK</span></td><td class="t">→orders</td></tr>
+<tr><td class="c">product_id <span class="tag fk">FK</span></td><td class="t">→products</td></tr>
+<tr><td class="c">quantity, unit_price</td><td class="t">numeric</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">inventory <span class="ko">현재 재고</span></div><table>
+<tr><td class="c">product_id <span class="tag pk">PK</span><span class="tag fk">FK</span></td><td class="t">→products</td></tr>
+<tr><td class="c">on_hand_qty</td><td class="t">int</td></tr>
+<tr><td class="c">reorder_point</td><td class="t">int</td></tr>
+<tr><td class="c">updated_at</td><td class="t">date</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">price_list <span class="ko">단가 개정 이력</span></div><table>
+<tr><td class="c">price_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">product_id <span class="tag fk">FK</span></td><td class="t">→products</td></tr>
+<tr><td class="c">effective_from</td><td class="t">date</td></tr>
+<tr><td class="c">unit_price</td><td class="t">numeric</td></tr>
+</table></div>
+
+<div class="tbl"><div class="nm">inventory_snapshots <span class="ko">월말 재고 이력</span></div><table>
+<tr><td class="c">snapshot_id <span class="tag pk">PK</span></td><td class="t">int</td></tr>
+<tr><td class="c">snapshot_date</td><td class="t">date</td></tr>
+<tr><td class="c">product_id <span class="tag fk">FK</span></td><td class="t">→products</td></tr>
+<tr><td class="c">on_hand_qty</td><td class="t">int</td></tr>
+</table></div>
+
+</div>
+
+<h3>관계 요약 (조인 경로)</h3>
+<p style="font-size:13.5px;color:var(--mut)"><code>products</code>→<code>product_families</code> · <code>equipment</code>→<code>production_lines</code> · <code>production_runs</code>→(lines, products, material_lots) · <code>quality_inspections</code>→(production_runs, equipment) · <code>equipment_downtime</code>→<code>equipment</code> · <code>safety_events</code>→<code>production_lines</code> · <code>material_lots</code>→<code>suppliers</code> · <code>sales_orders</code>→<code>customers</code> · <code>order_items</code>→(orders, products) · <code>inventory</code>→<code>products</code> · <code>price_list</code>→<code>products</code> · <code>inventory_snapshots</code>→<code>products</code></p>
+<p class="talk">핵심: <code>production_runs</code>가 라인·제품·자재로트를 잇는 <b>허브</b>. 여기에 <code>quality_inspections</code>(품질)·<code>equipment_downtime</code>(설비, 라인 경유)·<code>safety_events</code>(안전, 라인 경유)·<code>order_items</code>(매출, 제품 경유)가 모두 시간축으로 만난다.</p>
+</section>
+
+<section>
+<h2>심어둔 발견거리 — "라인 3에 수렴"</h2>
+<p>정답을 적어두지 않고, 여러 테이블에 흩어진 신호가 <b>2026년 4월 중순부터 정밀가공 3라인에 동시에</b> 나타나게 심었다. 에이전트가 조인+시계열로 캐내야 보인다.</p>
+<div class="insight">
+<span class="h">🎯 단일 루트 인사이트 (정답)</span>
+<b>정밀가공 3라인</b>의 <b>노후 CNC 선반 3호(MORI SL-25, 2016년 설치)</b>가 4월 중순부터 스핀들·주축 베어링 열화 →
+① <code>equipment_downtime</code> 다운타임 급증 (3라인 월 비가동 ~480분 → 6월 2,494분)
+② <code>quality_inspections</code> 치수공차이탈 불량 급증 (measured_value가 tol_lower~tol_upper 규격 이탈) — <b>불합격률 3월까지 0% → 4월 46% → 5·6월 100%</b>
+③ <code>safety_events</code> 라인3 위험구역 침입 경보 급증 — <b>작업자가 고장난 설비를 수동 개입하느라</b> 진입 (2교시 RISA와 자연 연결)
+④ 그런데 라인3은 <b>최대 고객사(대성모터스, 매출 41%) 납품 샤프트(SH 패밀리)</b> 주력 생산 → <code>order_items</code> 매출 편중 → <b>품질 문제가 핵심 매출을 위협</b>
+</div>
+<div class="bait">
+<span class="h">⚠ 미끼 (검증 교육용 함정)</span>
+같은 4월 중순, 라인3에 <b>신규 공급사(대한특수강) 강재 로트</b>가 처음 투입된다 → "자재가 불량 원인 아냐?"라고 오인하기 쉽게. <b>해소 단서</b>: 같은 대한특수강 강재가 라인1에도 갔지만 거기선 불량이 0건(검사 72건/불합격 0) → 자재 무죄, 진짜 변수는 설비. <b>"근거(쿼리)를 보고 검증하라"</b>는 메시지를 데이터로 체험.
+<br><br><b>보조 미끼</b>: 부싱 <code>BU-16-10-IT7</code>의 <code>inventory.on_hand_qty</code>(11,998)가 reorder_point(15,600) 밑 → "재고 소진 임박"이라는 곁가지 발견거리(메인 스토리와 무관, 자유 탐색용). 현재 재주문점 미달은 이 1개 품목뿐.
+</div>
+</section>
+
+<section>
+<h2>검증 질문셋 (점층) — 강사 시연 + 미션</h2>
+<table class="qtable">
+<tr><th>단계</th><th>질문 예시</th><th>보는 것 / 정답 방향</th></tr>
+<tr><td><span class="chip">준비운동</span></td><td>"지난달 라인별 생산량 보여줘"</td><td>sql_query trace + 표/차트. 단순 GROUP BY.</td></tr>
+<tr><td><span class="chip">분석 멀티턴</span></td><td>"불량이 제일 많은 라인은?" → "언제부터?" → "그 시기에 같이 변한 게 뭐야?"</td><td>라인3 → 4월 중순 → 다운타임·안전경보·신규 로트가 같이 튐. 쿼리 연쇄.</td></tr>
+<tr><td><span class="chip">검증/함정</span></td><td>"자재 로트가 원인이야?"</td><td>로트가 라인1엔 무해 → 자재 무죄, 설비가 진짜. "근거를 봐라".</td></tr>
+<tr><td><span class="chip">의사결정</span></td><td>"이 문제의 사업 영향과 함께 경영진 Q2 품질 리포트 만들어줘"</td><td>write_artifact HTML. 라인3 품질↔최대고객 매출 연결.</td></tr>
+</table>
+<p><b>핸즈온 미션</b>: "이 회사에서 가장 시급한 품질 문제 1개를 찾아, 근거(쿼리)를 들어 경영진 리포트로 만들어라."</p>
+</section>
+
+<section class="discuss">
+<h2>확정 결과 &amp; 검증</h2>
+<ol>
+<li><b>테이블 16개로 확정.</b> 초안 14개 + 자재수지용 <code>material_input_g</code>·단가이력 <code>price_list</code>·월말재고 <code>inventory_snapshots</code> 추가 → "자재 입고 대비 소비/잔량", "재고 추이", "단가 개정/YoY" 질문까지 답 가능.</li>
+<li><b>명칭 확정.</b> 한빛정밀(자사) · 고객 5사(대성모터스·한라공조·유진정밀기계·세종일렉트로·광성기어) · 공급사 4사(신성특수강·대한특수강·동방비철·대원스틸).</li>
+<li><b>기간 18개월 확정.</b> 2025-01-01~2026-06-30 일별(공휴일·일요일 제외). 시즌성·성장추세·설비 열화곡선·단가 개정 이력 반영. 총 ~16,000행.</li>
+<li><b>은근함 검증 완료.</b> sonnet급 에이전트에게 강의 맥락 없이 <code>detail_doc</code>+읽기전용 DB만 주고 드라이런 → 라인3·4월 시점·설비 주범(자재 헛다리 배제)·대성 41%·BU-16 재고를 <b>스스로</b> 도출 확인.</li>
+</ol>
+</section>
+
+<footer>
+한빛정밀 = 가상. 3교시 M.AX 시연용. 구축물: <code>03-db/schema.sql</code> · <code>gen_data.py</code> → <code>seed.sql</code> · <code>detail_doc.md</code>(LLM이 읽는 스키마 설명) · <code>dump.sql</code>(이식용 덤프). 검증 질문셋 = 아래 표.
+브랜치 <code>feat/lesson3-company-db</code>.
+</footer>
+
+</body></html>
