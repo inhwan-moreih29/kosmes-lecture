@@ -1,0 +1,851 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>2교시 · AI는 어떻게 말을 만드는가</title>
+<style>
+:root{
+ --ink:#0e1622;--mut:#5a6478;--line:#d9e0ec;--accent:#1746c4;--accent-d:#0f3597;
+ --soft:#eef3fb;--good:#0e9f6e;--warn:#e8590c;--bg1:#f4f7fc;--bg2:#e9eff9;
+ --chip:#e7eefc;--shadow:0 10px 40px rgba(20,40,90,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:-apple-system,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+ color:var(--ink);background:radial-gradient(120% 120% at 50% 0%,var(--bg1),var(--bg2));
+ overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#scaler{position:relative;}
+.stage{position:relative;width:1280px;height:720px;background:#fff;border-radius:18px;
+ box-shadow:var(--shadow);overflow:hidden;transform-origin:top left;}
+.slide{position:absolute;inset:0;padding:54px 64px 64px;display:none;flex-direction:column;
+ opacity:0;transition:opacity .28s ease;}
+.slide.on{display:flex;opacity:1;}
+.kick{font-size:15px;font-weight:800;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;}
+h1{font-size:54px;line-height:1.12;font-weight:850;letter-spacing:-.01em;}
+h2{font-size:36px;line-height:1.2;font-weight:820;letter-spacing:-.01em;}
+h2 .em{color:var(--accent);}
+.lead{font-size:21px;color:var(--mut);line-height:1.55;font-weight:500;}
+.big{font-size:25px;line-height:1.5;}
+p{font-size:19px;line-height:1.6;}
+.mut{color:var(--mut);}
+.row{display:flex;gap:26px;}
+.col{flex:1;min-width:0;}
+.center{align-items:center;justify-content:center;text-align:center;}
+.fill{flex:1;min-height:0;}
+ul{margin-left:4px;}li{font-size:19px;line-height:1.62;margin:9px 0;list-style:none;position:relative;padding-left:30px;}
+li:before{content:"";position:absolute;left:4px;top:11px;width:9px;height:9px;border-radius:50%;background:var(--accent);}
+li.x:before{background:var(--warn);}li.y:before{background:var(--good);}
+.chip{display:inline-block;background:var(--chip);color:var(--accent-d);font-weight:800;font-size:15px;
+ padding:5px 13px;border-radius:999px;margin:3px 5px 3px 0;}
+.term{background:#fff7e9;border:1px solid #f0c277;border-radius:12px;padding:13px 18px;font-size:17px;}
+.term b{color:#9a5a00;}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+.card h3{font-size:20px;color:var(--accent-d);margin-bottom:7px;}
+.spinebox{background:linear-gradient(100deg,#1746c4,#3f74ef);color:#fff;border-radius:16px;padding:28px 34px;
+ font-size:30px;font-weight:800;line-height:1.4;box-shadow:var(--shadow);}
+.spinebox small{display:block;font-size:17px;font-weight:600;opacity:.85;margin-top:8px;}
+.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);
+ padding:9px 15px;border-radius:10px;font-weight:700;font-size:15px;transition:.15s;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.sel{background:var(--accent);color:#fff;border-color:var(--accent);}
+.ctrlrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+.demo{background:#f8fafe;border:1px solid var(--line);border-radius:16px;padding:20px;}
+.label{font-size:14px;font-weight:800;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;margin-bottom:7px;}
+input[type=range]{width:100%;accent-color:var(--accent);height:26px;}
+.meter{height:30px;border-radius:8px;background:#e6ebf4;overflow:hidden;position:relative;}
+.meter>i{position:absolute;inset:0;width:50%;background:linear-gradient(90deg,#1746c4,#5f8cef);transition:.2s;}
+.takeaway{display:flex;gap:16px;align-items:flex-start;background:var(--soft);border:1px solid var(--line);
+ border-radius:14px;padding:18px 22px;}
+.takeaway .n{font-size:30px;font-weight:900;color:#fff;background:var(--accent);min-width:46px;height:46px;
+ border-radius:12px;display:flex;align-items:center;justify-content:center;}
+/* tokens */
+.toks{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.tok{padding:7px 11px;border-radius:9px;font-weight:800;font-size:18px;border:1px solid var(--line);}
+.tok .id{display:block;font-size:10px;font-weight:700;color:var(--mut);text-align:center;margin-top:2px;}
+/* prob bars */
+.bars{display:flex;flex-direction:column;gap:8px;}
+.brow{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.brow .w{flex:0 0 116px;text-align:right;font-weight:800;font-size:18px;}
+.brow .track{flex:1;height:26px;background:#e6ebf4;border-radius:7px;overflow:hidden;}
+.brow .track>i{display:block;height:100%;background:linear-gradient(90deg,#1746c4,#6f97f0);transition:.25s;}
+.brow .pct{flex:0 0 56px;font-size:15px;font-weight:800;color:var(--accent-d);font-variant-numeric:tabular-nums;}
+.brow:hover .w{color:var(--accent);}
+.brow.spin{background:#eef3fb;border-radius:8px;}
+.brow.spin .w{color:var(--accent);}
+.brow.hit{background:#fff2e0;border-radius:8px;}
+.brow.hit .w{color:var(--warn);}
+.brow.hit .track{box-shadow:0 0 0 3px rgba(232,89,12,.4);}
+.gen{font-size:26px;font-weight:800;line-height:1.5;min-height:42px;}
+.gen .cur{color:var(--accent);border-right:3px solid var(--accent);padding-right:2px;}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;}
+.attn .tok{cursor:pointer;transition:.15s;}
+.qgrid{display:grid;gap:2px;}
+.qgrid span{aspect-ratio:1;background:var(--accent);border-radius:2px;opacity:.85;}
+#bar{position:fixed;left:0;top:0;height:4px;background:var(--accent);width:0;z-index:50;transition:width .25s;}
+#hud{position:fixed;right:16px;bottom:12px;font-size:13px;color:#8a93a6;z-index:50;font-weight:700;}
+#nav{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);display:flex;gap:8px;z-index:50;opacity:.25;transition:.2s;}
+#nav:hover{opacity:1;}
+#nav button{width:34px;height:30px;border:none;background:#fff;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:15px;}
+.tag{position:absolute;top:54px;right:64px;font-size:14px;font-weight:800;color:#aeb6c6;letter-spacing:.06em;}
+.hint{font-size:13px;color:var(--mut);}
+kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:13px;font-weight:700;}
+.num{font-size:40px;font-weight:900;color:var(--accent);line-height:1;}
+</style></head><body>
+<div id="bar"></div>
+<div id="scaler"><div class="stage" id="stage">
+
+<!-- 0 TITLE -->
+<section class="slide center">
+ <div class="kick">LLM 이론</div>
+ <h1 style="margin:18px 0 14px;">AI는 어떻게<br><span style="color:var(--accent)">말을 만드는가</span></h1>
+ <p class="lead" style="max-width:840px">매일 쓰는 ChatGPT — 그런데 <b style="color:var(--ink)">어떻게 문장을 지어내고</b>, 왜 가끔 <b style="color:var(--ink)">자신 있게 틀리며</b>,<br>왜 'GPU가 모자라다'는 뉴스가 끊이지 않을까요? 겉이 아니라 <b style="color:var(--ink)">원리를</b>, 그림과 데모로 한 단계씩 열어 봅니다.</p>
+ <div style="margin-top:34px" class="hint">넘기기 <kbd>→</kbd> / <kbd>Space</kbd> · 이전 <kbd>←</kbd> · 전체화면 <kbd>F</kbd></div>
+</section>
+
+<!-- 1 SPINE recall -->
+<section class="slide center">
+ <div class="kick">1교시에서 약속한 한 문장</div>
+ <div class="spinebox" style="margin:26px 0;max-width:880px">
+  AI는 세상의 모든 것을 <u>숫자</u>로 바꿔서,<br>그 숫자 속 <u>패턴</u>을 찾는다.
+  <small>1교시는 '이미지'였습니다. 이번엔 '글자'로 — 놀랄 만큼 똑같습니다.</small>
+ </div>
+ <p class="big mut">이미지가 픽셀 숫자였듯, 글자도 <b style="color:var(--ink)">숫자(토큰)</b>로 바뀝니다.</p>
+</section>
+
+<!-- 2 BEAT1 divider -->
+<section class="slide">
+ <div class="kick">1/3</div>
+ <h1 style="margin-top:10px">글자도 <span style="color:var(--accent)">숫자</span>다<br><span style="font-size:34px;color:var(--mut);font-weight:700">— 그리고 LLM은 '초강력 자동완성'</span></h1>
+ <p class="lead" style="margin-top:16px;max-width:840px">모델은 글자를 통째로 보지 않습니다. 먼저 '조각(토큰)'으로 자르고, 각 조각에 번호를 매깁니다.</p>
+ <div class="fill" style="display:flex;align-items:center;justify-content:center">
+  <div style="display:flex;align-items:center;gap:26px">
+   <div style="text-align:center">
+    <div class="label">사람이 쓴 글</div>
+    <div class="tok" style="font-size:26px;background:#fff;border-color:var(--line);padding:12px 16px">품질 검사</div>
+   </div>
+   <div style="font-size:36px;color:var(--accent);font-weight:900">→</div>
+   <div style="text-align:center">
+    <div class="label">① 조각으로 자르기</div>
+    <div class="toks" style="justify-content:center">
+     <div class="tok" style="background:#e7eefc;border-color:#bcd0f7">품</div>
+     <div class="tok" style="background:#e9faef;border-color:#9fdcc0">질</div>
+     <div class="tok" style="background:#fff2e0;border-color:#f0c277">␣검사</div>
+    </div>
+   </div>
+   <div style="font-size:36px;color:var(--accent);font-weight:900">→</div>
+   <div style="text-align:center">
+    <div class="label">② 번호 매기기</div>
+    <div style="font-family:monospace;font-size:24px;font-weight:800;color:var(--accent-d);background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px 16px">11321 · 2842 · 9075</div>
+   </div>
+  </div>
+ </div>
+ <div class="term" style="max-width:900px"><b>토큰(token)</b> — 모델이 글을 다루는 최소 단위. 단어보다 작을 수도(예: strawberry → str·aw·berry), 한 글자일 수도 있습니다. <b>LLM</b> = Large Language Model = '아주 큰 언어 모델'.</div>
+</section>
+
+<!-- 3 TOKENIZER DEMO -->
+<section class="slide">
+ <span class="tag">데모 · 토큰 = 숫자</span>
+ <h2>문장은 <span class="em">조각(토큰)</span>으로 잘려 번호가 된다</h2>
+ <p class="lead" style="margin:8px 0 16px">예문을 골라보세요. 모델은 아래 <b>조각들의 번호 나열</b>로 문장을 받습니다.</p>
+ <div class="demo fill">
+  <div class="ctrlrow" id="tkbtns" style="margin-bottom:18px"></div>
+  <div class="label">잘린 토큰들</div>
+  <div class="toks" id="tktoks" style="margin-bottom:18px"></div>
+  <div class="label">모델이 실제로 받는 것 (토큰 번호 나열 · 예시)</div>
+  <div id="tkids" style="font-family:monospace;font-size:22px;font-weight:800;color:var(--accent-d);background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px"></div>
+  <p class="hint" id="tknote" style="margin-top:14px"></p>
+  <div class="label" style="margin-top:22px">왜 한 글자씩 자르지 않을까?</div>
+  <div class="row" style="margin-top:8px;gap:16px">
+   <div class="card col"><h3 style="font-size:16px">글자 하나씩이면?</h3><p style="font-size:15px">조각이 너무 많아져 느리고 비싸집니다.</p></div>
+   <div class="card col"><h3 style="font-size:16px">단어 통째로면?</h3><p style="font-size:15px">세상의 단어·신조어가 끝이 없어 다 외울 수 없습니다.</p></div>
+   <div class="card col"><h3 style="font-size:16px;color:var(--good)">그래서 '자주 쓰는 덩어리'</h3><p style="font-size:15px">흔한 덩어리는 1조각, 드문 건 잘게 — 그 절충이 토큰.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 3b KO vs EN token economy -->
+<section class="slide">
+ <span class="tag">실제 토크나이저 · GPT-4o</span>
+ <h2>같은 뜻인데 <span class="em">한국어는 토큰 2배</span> — 그래서 더 비싸다</h2>
+ <p class="lead" style="margin:8px 0 12px">토큰 수 = <b>요금</b> · <b>속도</b> · <b>기억 용량</b>. 같은 의미의 문장을 실제 토크나이저로 잘라 비교합니다.</p>
+ <div class="ctrlrow" id="tebtns" style="margin-bottom:12px"></div>
+ <div class="row" style="gap:20px">
+  <div class="col"><div class="demo" style="height:100%">
+   <div class="label">영어 — <span style="color:var(--mut);font-weight:600" id="teen_s"></span></div>
+   <div class="toks" id="teen" style="margin:10px 0 10px"></div>
+   <div class="big">토큰 <b style="color:var(--accent);font-size:32px" id="teen_n">6</b>개</div>
+  </div></div>
+  <div class="col"><div class="demo" style="height:100%;border-color:#f0c277;background:#fffdf6">
+   <div class="label">한국어 — <span style="color:var(--mut);font-weight:600" id="teko_s"></span></div>
+   <div class="toks" id="teko" style="margin:10px 0 10px"></div>
+   <div class="big">토큰 <b style="color:var(--warn);font-size:32px" id="teko_n">12</b>개 <span class="chip" id="teratio" style="background:#ffe3cf;color:#b34700">2.0배</span></div>
+  </div></div>
+ </div>
+ <div class="three" style="margin-top:14px">
+  <div class="card"><h3 style="font-size:16px">① 영어로 학습된 자</h3><p style="font-size:15px">토크나이저가 영어를 가장 많이 봐, 흔한 단어는 <b>1토큰</b>. (드문·긴 단어는 <b>Predict·ive</b>처럼 쪼개져요 — 통짜가 아님)</p></div>
+  <div class="card"><h3 style="font-size:16px">② 한글은 잘게</h3><p style="font-size:15px">한국어는 음절·조사로 쪼개지고, 한 글자가 <b>여러 조각</b>이 되기도.</p></div>
+  <div class="card"><h3 style="font-size:16px;color:var(--warn)">③ 그래서 현실은</h3><p style="font-size:15px">같은 답도 한국어가 <b>더 비싸고</b>, 대화 기억도 <b>더 빨리 참</b>.</p></div>
+ </div>
+</section>
+
+<!-- 4 strawberry r-count -->
+<section class="slide center">
+ <div class="kick">왜 똑똑한 AI가 이런 걸 틀릴까</div>
+ <h2 style="margin:14px 0">"strawberry에 'r'이 몇 개?" <span class="em">— AI가 자주 틀립니다</span></h2>
+ <div class="demo" style="max-width:820px;width:100%">
+  <div class="label">우리가 보는 것 (글자 10개)</div>
+  <div class="toks center" id="sbletters" style="justify-content:center;margin-bottom:18px"></div>
+  <div class="label">AI가 보는 것 (토큰 3조각)</div>
+  <div class="toks center" id="sbtoks" style="justify-content:center"></div>
+ </div>
+ <p class="big" style="margin-top:22px;max-width:880px">AI는 글자를 하나하나 세지 않습니다. <b>'str'·'aw'·'berry' 같은 덩어리</b>로 보기 때문에, 글자 수 세기처럼 단순한 걸 의외로 틀립니다. <span class="mut">— 멍청해서가 아니라, 보는 단위가 다른 것.</span></p>
+</section>
+
+<!-- 5 NEXT-TOKEN DEMO -->
+<section class="slide">
+ <span class="tag">데모 · 답을 만드는 원리</span>
+ <h2>LLM은 <span class="em">'다음 한 조각'</span>을 확률로 찍는다 — 계속</h2>
+ <p class="lead" style="margin:8px 0 14px">막대가 모델이 매긴 확률입니다. 후보를 클릭해 직접 문장을 이어보세요.</p>
+ <div class="row fill">
+  <div class="col" style="flex:0 0 540px">
+   <div class="demo" style="height:100%">
+    <div class="label">지금까지 만든 문장</div>
+    <div class="gen" id="ntgen" style="margin-bottom:16px"></div>
+    <div class="label">다음 조각 후보 (확률)</div>
+    <div class="bars" id="ntbars"></div>
+   </div>
+  </div>
+  <div class="col">
+   <div class="demo" style="height:100%">
+    <div class="ctrlrow" style="margin-bottom:16px">
+     <button class="btn sel" id="ntstep">한 조각씩 ▶</button>
+     <button class="btn" id="ntauto">자동으로 ▶▶</button>
+     <button class="btn" id="ntreset">처음부터</button>
+    </div>
+    <p class="big" style="font-size:18px">이게 전부입니다. <b>"다음에 올 가장 그럴듯한 조각"</b>을 고르고, 그걸 붙인 문장을 다시 넣어 또 다음 조각을 고릅니다.</p>
+    <div class="term" style="margin-top:16px">놀라운 점 — 거대한 자동완성이 이렇게 한 조각씩 쌓이면, 번역·요약·코딩·상담까지 됩니다. <b>'이해'가 아니라 '예측'</b>이라는 점만 기억하세요.</div>
+    <div style="margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-height:54px">
+     <div class="label">방금 일어난 일</div>
+     <p class="big" id="ntinfo" style="font-size:18px;margin-top:4px">‘한 조각씩 ▶’ 을 눌러 한 단계씩 보거나, ‘자동 ▶▶’ 으로 쭉 이어보세요.</p>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 5b PRETRAIN -->
+<section class="slide">
+ <div class="kick">그런데 · 이 확률은 어디서 왔나</div>
+ <h2>인터넷의 방대한 글로 <span class="em">'다음 단어 맞히기'</span>를 수십억 번</h2>
+ <p class="lead" style="margin:8px 0 16px">모델은 처음엔 아무것도 모릅니다. 엄청난 양의 글에서 다음 단어를 맞혀보고, 틀릴 때마다 내부 숫자를 조금씩 스스로 고칩니다 — 이게 <b>학습(사전학습)</b>.</p>
+ <div class="row fill" style="align-items:stretch">
+  <div class="col"><div class="card" style="height:100%"><div class="num">①</div><h3 style="margin-top:6px">재료</h3><p style="font-size:17px">책·뉴스·위키·코드… <b>인터넷 규모의 글</b>을 읽습니다.</p></div></div>
+  <div class="col"><div class="card" style="height:100%"><div class="num">②</div><h3 style="margin-top:6px">방법</h3><p style="font-size:17px">"나는 밥을 ___" 의 빈칸 맞히기를 <b>수십억 번</b> 반복합니다.</p></div></div>
+  <div class="col"><div class="card" style="height:100%"><div class="num">③</div><h3 style="margin-top:6px">결과</h3><p style="font-size:17px">문법·상식·문체가 <b>확률로</b> 몸에 뱁니다. 앞 장의 그 막대가 이렇게 생겼습니다.</p></div></div>
+ </div>
+ <div class="term" style="margin-top:16px">1교시와 똑같습니다 — 필터 숫자를 데이터로 배웠듯, LLM도 <b>단어 확률을 데이터로 배웁니다.</b> 그래서 <b>데이터·계산(GPU)이 클수록</b> 똑똑해지죠. (← 3막 'GPU 품귀'의 뿌리)</div>
+</section>
+
+<!-- 6 BEAT2 divider -->
+<section class="slide">
+ <div class="kick">2/3</div>
+ <h1 style="margin-top:10px">'예측'이라서 <span style="color:var(--warn)">생기는 일</span></h1>
+ <p class="lead" style="margin-top:14px;max-width:860px">검색이 아니라 예측. 이 한 가지가 LLM의 강점과 약점을 동시에 설명합니다.</p>
+ <div class="fill" style="display:flex;align-items:center">
+  <div class="row" style="width:100%">
+   <div class="card col"><h3>온도(temperature)</h3><p>확률을 얼마나 충실히 따를지 조절하는 손잡이. 낮으면 안전·반복, 높으면 창의·엉뚱.</p></div>
+   <div class="card col"><h3 style="color:var(--warn)">환각(hallucination)</h3><p>사실 조회가 아니라 '그럴듯함' 예측 → 자신 있게 <b>거짓</b>을 지어내기도.</p></div>
+   <div class="card col"><h3 style="color:var(--good)">잘 쓰는 법</h3><p>그래서 <b>어떻게 묻고(프롬프트)</b>, <b>근거를 붙이는지(RAG)</b>가 중요해집니다.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 7 TEMPERATURE DEMO -->
+<section class="slide">
+ <span class="tag">데모 · 온도</span>
+ <h2><span class="em">온도</span>를 올리면 창의적이지만, 헛소리도 늘어난다</h2>
+ <p class="lead" style="margin:8px 0 16px">"새가 하늘을 ___" 의 다음 조각 분포입니다. 온도를 바꿔 보세요.</p>
+ <div class="row fill" style="align-items:center">
+  <div class="col">
+   <div class="demo">
+    <div class="bars" id="tpbars"></div>
+   </div>
+  </div>
+  <div class="col" style="flex:0 0 360px">
+   <div class="demo">
+    <div class="label">온도 (temperature)</div>
+    <input id="tpslider" type="range" min="10" max="150" value="70">
+    <div class="big" style="text-align:center;margin:6px 0"><b id="tpval" style="color:var(--accent)">0.70</b></div>
+    <button class="btn" id="tpsample" style="width:100%;margin-top:6px">이 분포로 한 번 뽑아보기 🎲</button>
+    <div class="big" id="tpout" style="text-align:center;margin-top:14px;min-height:34px">—</div>
+    <div class="label" style="margin-top:10px">뽑은 결과 <span class="mut" style="text-transform:none;font-weight:600">(눌러서 쌓아보세요)</span></div>
+    <div id="tphist" class="toks" style="min-height:32px;margin-top:4px"></div>
+    <p class="hint" id="tpmsg" style="margin-top:8px"></p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 8 HALLUCINATION -->
+<section class="slide center">
+ <div class="kick">환각 · 왜 자신 있게 틀릴까</div>
+ <h2 style="max-width:980px;margin:14px 0">LLM은 <span class="em">사실을 찾는 게 아니라</span>,<br>'그럴듯한 다음 말'을 짓는 기계입니다.</h2>
+ <div class="row" style="max-width:1000px">
+  <div class="card col"><h3>그래서 강하다</h3><p class="big" style="font-size:19px">한 번도 본 적 없는 문장도 매끄럽게 만들어냅니다. 창의·요약·번역의 원천.</p></div>
+  <div class="card col"><h3 style="color:var(--warn)">그래서 위험하다</h3><p class="big" style="font-size:19px">근거가 없어도 <b>가장 그럴듯한</b> 답을 자신 있게 냅니다. 없는 논문·법조항·수치를 지어내기도.</p></div>
+ </div>
+ <p class="big" style="margin-top:22px;max-width:920px">→ 그래서 <b>'근거를 보여줘 / 출처를 확인'</b>이 필수입니다. <span class="mut">다음 장부터 잘 쓰는 법(프롬프트·근거)을 봅니다.</span></p>
+</section>
+
+<!-- 9b PROMPT ENGINEERING + CoT -->
+<section class="slide">
+ <div class="kick">잘 쓰는 법 ① · 프롬프트 엔지니어링</div>
+ <h2>같은 AI라도 <span class="em">'어떻게 묻느냐'</span>로 답이 달라진다</h2>
+ <p class="lead" style="margin:8px 0 16px">프롬프트 = AI에게 주는 지시문. 이 지시문을 잘 다듬는 것을 <b>프롬프트 엔지니어링</b>이라 합니다 — 요즘 가장 많이 들리는 말이죠.</p>
+ <div class="row fill" style="align-items:stretch">
+  <div class="col"><div class="card" style="height:100%;border-color:#f0c277;background:#fffdf6">
+   <h3 style="color:var(--warn)">막연하게 물으면</h3>
+   <p class="big" style="font-size:19px;margin-top:4px">“매출 올리는 법 알려줘”</p>
+   <p style="font-size:16px;margin-top:10px;color:var(--mut)">→ 누구에게나 통할 <b>뻔한 일반론</b>만 돌아옵니다.</p>
+  </div></div>
+  <div class="col"><div class="card" style="height:100%;border-color:#9fdcc0;background:#f6fdf9">
+   <h3 style="color:var(--good)">역할·맥락·형식을 주면</h3>
+   <p class="big" style="font-size:18px;margin-top:4px">“너는 20년차 제조 컨설턴트야. <b>직원 30명 금속가공 공장</b>의 불량률을 낮출 방법을 <b>비용 낮은 순 3가지</b>로.”</p>
+   <p style="font-size:16px;margin-top:10px;color:var(--mut)">→ 구체적이고 <b>바로 쓸 수 있는</b> 답이 나옵니다.</p>
+  </div></div>
+ </div>
+ <div class="term" style="margin-top:16px">정리하면 <b>역할·맥락·형식</b>을 주는 게 핵심. 그리고 <b>답을 서두르지 않게</b> 하는 것도 중요한데 — 다음 장에서 그 강력한 한 줄, <b>‘생각의 사슬(CoT)’</b>을 봅니다.</div>
+</section>
+
+<!-- 9b2 CoT -->
+<section class="slide">
+ <div class="kick">잘 쓰는 법 ① 보충 · 생각의 사슬(CoT)</div>
+ <h2><span class="em">"차근차근 생각해봐"</span> 한 줄이 정답을 바꾼다</h2>
+ <p class="lead" style="margin:8px 0 16px">LLM은 '다음 한 조각'을 확률로 잇는 기계입니다. 곧바로 답부터 뱉으면, 충분히 따지기 전에 <b>그럴듯해 보이는 답 조각</b>에 휩쓸립니다.</p>
+ <div class="row fill" style="align-items:stretch">
+  <div class="col"><div class="card" style="height:100%;border-color:#f0c277;background:#fffdf6">
+   <h3 style="color:var(--warn)">바로 답하게 하면</h3>
+   <p style="font-size:15px;color:var(--mut);margin:2px 0 10px">농구공 3상자(한 상자 12개)와 축구공 5개. 공은 모두 몇 개?</p>
+   <p class="big" style="font-size:24px">“<b>36개</b>” <span style="color:var(--warn)">✗</span></p>
+   <p style="font-size:15px;margin-top:10px;color:var(--mut)">→ 축구공 5개를 빠뜨리고, 그럴듯한 수부터 뱉습니다.</p>
+  </div></div>
+  <div class="col"><div class="card" style="height:100%;border-color:#9fdcc0;background:#f6fdf9">
+   <h3 style="color:var(--good)">생각을 펼치게 하면</h3>
+   <p style="font-size:15px;color:var(--mut);margin:2px 0 10px">…“차근차근 단계별로 생각해봐”</p>
+   <p class="big" style="font-size:19px;line-height:1.7">① 농구공 3×12 = <b>36</b><br>② 축구공 = <b>5</b><br>③ 합 36+5 = <b>41개</b> <span style="color:var(--good)">✓</span></p>
+  </div></div>
+ </div>
+ <div class="term" style="margin-top:16px"><b>왜 통할까?</b> 확률 모델이라, 생각을 <b>글로 펼쳐두면</b> 다음 조각이 그 위에서 더 쉽고 정확히 예측됩니다 — 답을 한 번에 찍지 않고 <b>올바른 중간 결과에 기대어</b> 냅니다. 요즘 <b>추론 모델</b>은 이 '생각'을 스스로 길게 하죠(느리지만 똑똑한 AI).</div>
+</section>
+
+<!-- 9c RAG + embedding -->
+<section class="slide">
+ <div class="kick">잘 쓰는 법 ② · RAG</div>
+ <h2><span class="em">RAG</span> — 모델에 '근거 자료'를 찾아 붙여준다</h2>
+ <p class="lead" style="margin:8px 0 14px">RAG = <b>검색(Retrieval)</b> + <b>생성(Generation)</b>. 흐릿한 기억 대신 <b>믿을 자료를 먼저 찾아</b> 그걸 보고 답하게 해, 환각을 크게 줄입니다.</p>
+ <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:4px 0 16px">
+  <div style="text-align:center"><div class="label">질문</div><div class="tok" style="background:#e7eefc;border-color:#bcd0f7">불량률 낮추려면?</div></div>
+  <div style="font-size:24px;color:var(--accent);font-weight:900">→</div>
+  <div style="text-align:center"><div class="label">① 뜻 가까운 자료 검색</div><div class="tok" style="background:#e9faef;border-color:#9fdcc0">사내 품질 매뉴얼</div></div>
+  <div style="font-size:24px;color:var(--accent);font-weight:900">→</div>
+  <div style="text-align:center"><div class="label">② 질문+자료를 모델에</div><div class="tok" style="background:#fff2e0;border-color:#f0c277">자료 보고 생성</div></div>
+  <div style="font-size:24px;color:var(--accent);font-weight:900">→</div>
+  <div style="text-align:center"><div class="label">결과</div><div class="tok" style="background:#e6f7fb;border-color:#9fd6e6">답 + <b>출처</b> ✔</div></div>
+ </div>
+ <div class="row fill" style="align-items:stretch">
+  <div class="col"><div class="card" style="height:100%;display:flex;flex-direction:column"><h3>‘뜻이 가까운’이란? · 임베딩</h3>
+   <p style="font-size:15px;margin:4px 0 8px"><b>임베딩</b>: 문장의 뜻을 <b>숫자 좌표</b>로 바꾼 것 — 뜻이 비슷하면 좌표도 가까이 모입니다.</p>
+   <div style="position:relative;flex:1;min-height:170px;background:linear-gradient(160deg,#fbfdff,#eaf0fb);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+    <svg style="position:absolute;inset:0;width:100%;height:100%">
+     <ellipse cx="30%" cy="38%" rx="26%" ry="30%" fill="rgba(14,159,110,.09)" stroke="#0e9f6e" stroke-width="1.5" stroke-dasharray="5"/>
+    </svg>
+    <div style="position:absolute;left:18%;top:20%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(23,70,196,.18)"></span><span style="font-size:14px;font-weight:800;color:var(--accent-d)">불량률 낮추기 <span class="mut" style="font-weight:600">(질문)</span></span></div>
+    <div style="position:absolute;left:30%;top:44%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:var(--good)"></span><span style="font-size:14px;font-weight:800;color:#0b7a54">품질관리 매뉴얼</span></div>
+    <div style="position:absolute;left:42%;top:60%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:var(--good)"></span><span style="font-size:14px;font-weight:800;color:#0b7a54">불량 원인 분석표</span></div>
+    <div style="position:absolute;left:80%;top:80%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:#98a3b6"></span><span style="font-size:14px;font-weight:700;color:var(--mut)">직원 휴가 규정</span></div>
+    <div style="position:absolute;left:30%;top:76%;font-size:12px;font-weight:800;color:var(--good)">← 가까운 자료만 골라 옴</div>
+   </div></div></div>
+  <div class="col"><div class="card" style="height:100%;display:flex;flex-direction:column"><h3 style="color:var(--accent-d)">찾은 자료는 프롬프트에 <b>자동으로</b> 붙는다</h3>
+   <p style="font-size:15px;margin:4px 0 10px">사용자는 질문만 했지만, 시스템이 찾은 자료를 <b>질문 앞에 몰래 이어붙여</b> 모델에 넣습니다.</p>
+   <div style="flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.6">
+    <div style="color:var(--mut);font-weight:800;font-size:12px;letter-spacing:.04em">모델이 실제로 받는 프롬프트</div>
+    <div style="margin-top:6px"><span style="background:#e9faef;border-radius:5px;padding:2px 6px;font-weight:700">[찾은 자료]</span> 품질관리 매뉴얼 3.2절: 공정 온도를 ±2℃로…</div>
+    <div style="margin-top:8px"><span style="background:#e7eefc;border-radius:5px;padding:2px 6px;font-weight:700">[질문]</span> 불량률 낮추려면?</div>
+   </div>
+   <p class="hint" style="margin-top:10px">→ 그래서 답에 <b>출처</b>가 붙고, 모델이 모르던 <b>사내·최신 자료</b>도 반영돼 환각이 크게 줍니다.</p>
+  </div></div>
+ </div>
+</section>
+
+<!-- 10 BEAT3 divider -->
+<section class="slide">
+ <div class="kick">3/3 · 요즘 뉴스의 정체</div>
+ <h1 style="margin-top:10px">왜 LLM은 <span style="color:var(--warn)">메모리를 이렇게 많이 먹을까</span></h1>
+ <p class="lead" style="margin-top:14px;max-width:880px">"GPU 품귀", "엔비디아 시총 1위", "AI는 전기 먹는 하마" — 그 뿌리에는 세 가지 메모리 먹는 곳이 있습니다.</p>
+ <div class="fill" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+  <div style="display:flex;align-items:center;gap:24px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 34px;box-shadow:var(--shadow)">
+   <div style="font-size:15px;font-weight:900;color:#fff;background:var(--ink);border-radius:9px;padding:12px 15px;letter-spacing:.05em">GPU</div>
+   <div><div style="font-size:14px;font-weight:800;color:var(--mut)">GPU 한 장(RTX 4090) 전용 메모리</div><div style="font-size:38px;font-weight:900;color:var(--accent);line-height:1.15">24 GB</div></div>
+   <div style="font-size:28px;color:var(--mut);font-weight:900">vs</div>
+   <div><div style="font-size:14px;font-weight:800;color:var(--mut)">큰 모델 하나가 요구하는 양</div><div style="font-size:38px;font-weight:900;color:var(--warn);line-height:1.15">수십~수백 GB</div></div>
+  </div>
+  <div class="term" style="max-width:920px"><b>VRAM</b> — 그래픽카드(GPU) 안의 전용 메모리. LLM은 계산하는 동안 필요한 걸 전부 이 VRAM에 올려둬야 합니다. RTX 4090 한 장 = <b>24GB</b>.</div>
+ </div>
+</section>
+
+<!-- 11 three sinks -->
+<section class="slide">
+ <h2>메모리를 먹는 <span class="em">세 곳</span></h2>
+ <p class="lead" style="margin:8px 0 18px">왜 챗봇 하나 돌리는 데 수십~수백 GB가 필요한지 — 이 세 곳을 <b>하나씩</b> 자세히 봅니다.</p>
+ <div class="three fill">
+  <div class="card"><div class="num">①</div><h3 style="margin-top:8px">모델 가중치</h3><p style="font-size:16px">'손잡이(파라미터)'가 수백억~수천억 개. 모델을 <b>통째로</b> VRAM에 올려야 합니다.</p><p class="big" style="margin-top:10px;color:var(--accent)">70B 모델 ≈ 140GB</p></div>
+  <div class="card"><div class="num">②</div><h3 style="margin-top:8px">대화 기억 (KV 캐시)</h3><p style="font-size:16px">앞서 계산한 결과를 <b>저장·재사용</b>해 속도를 높입니다. 대화가 길수록 이 저장분이 쌓여 늘어납니다.</p><p class="big" style="margin-top:8px;color:var(--accent)">길면 수십 GB 추가</p></div>
+  <div class="card"><div class="num">③</div><h3 style="margin-top:8px">모든 단어쌍 비교 (어텐션)</h3><p style="font-size:16px">모든 단어가 서로를 비교 → 길이의 <b>제곱</b>으로 계산·메모리가 폭증합니다.</p><p class="big" style="margin-top:10px;color:var(--warn)">2배 길면 4배</p></div>
+ </div>
+</section>
+
+<!-- 11a SINK① weights detail -->
+<section class="slide">
+ <span class="tag">세 곳 ① 자세히</span>
+ <h2>① <span class="em">모델 가중치</span> — 배운 숫자를 통째로 올려둬야 한다</h2>
+ <p class="lead" style="margin:8px 0 16px">가중치 = 학습으로 몸에 밴 '손잡이(파라미터)' 숫자들. 계산하려면 이 숫자 전부가 VRAM에 올라와 있어야 합니다.</p>
+ <div class="row fill" style="align-items:stretch">
+  <div class="col"><div class="card" style="height:100%"><h3>비유 — 요리사의 레시피</h3>
+   <p style="font-size:17px">한 페이지만 펴서 요리할 수 없습니다. 손님을 받으려면 <b>레시피 책 전체</b>를 펼쳐 책상에 올려둬야 하죠. 모델도 <b>일부만 올려선 못 돌립니다</b> — 전부 올려야 합니다.</p>
+   <p style="font-size:16px;margin-top:12px;color:var(--mut)">그래서 큰 모델일수록 '책'이 두꺼워지고, 필요한 책상(VRAM)도 커집니다.</p>
+  </div></div>
+  <div class="col"><div class="card" style="height:100%"><h3>얼마나 될까 — 간단한 곱셈</h3>
+   <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+    <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 15px"><span style="font-size:15px;color:var(--mut);font-weight:800">파라미터 수</span><div style="font-size:26px;font-weight:900;color:var(--accent)">700억 개 <span style="font-size:16px;color:var(--mut)">(= 70B)</span></div></div>
+    <div style="text-align:center;font-size:22px;font-weight:900;color:var(--mut)">×</div>
+    <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 15px"><span style="font-size:15px;color:var(--mut);font-weight:800">숫자 1개당 저장 크기</span><div style="font-size:26px;font-weight:900;color:var(--accent)">2 바이트 <span style="font-size:16px;color:var(--mut)">(16비트)</span></div></div>
+    <div style="text-align:center;font-size:22px;font-weight:900;color:var(--mut)">=</div>
+    <div style="background:#eef3fb;border:1px solid #bcd0f7;border-radius:10px;padding:12px 15px;text-align:center"><span style="font-size:44px;font-weight:900;color:var(--accent-d)">140 GB</span></div>
+   </div>
+  </div></div>
+ </div>
+ <div class="term" style="margin-top:16px">이 <b>140GB</b>는 대화를 시작하기도 전에 <b>가만히 있어도</b> 잡아먹는 양입니다. RTX 4090(24GB)으로는 이것만으로도 <b>6장</b>이 필요하죠. <span class="mut">(뒤의 '양자화'가 바로 이 숫자 크기를 줄이는 방법)</span></div>
+</section>
+
+<!-- 11b SINK② KV cache detail -->
+<section class="slide">
+ <span class="tag">세 곳 ② 자세히</span>
+ <h2>② <span class="em">대화 기억(KV 캐시)</span> — 앞 계산을 저장해 두고 다시 쓴다</h2>
+ <p class="lead" style="margin:8px 0 16px">LLM은 한 조각씩 이어붙이죠. 새 조각을 만들 때마다 <b>앞 문장 전부를 처음부터 다시 계산</b>하면 엄청난 낭비 — 그래서 한 번 계산한 결과를 저장해 재사용합니다.</p>
+ <div class="row fill" style="align-items:stretch">
+  <div class="col"><div class="card" style="height:100%;border-color:#f0c277;background:#fffdf6"><h3 style="color:var(--warn)">저장 안 하면 (낭비)</h3>
+   <p style="font-size:16px;margin-top:4px">조각을 하나 더 만들 때마다 <b>앞 단어 전부</b>를 매번 다시 계산.</p>
+   <div style="margin-top:12px;font-size:15px;line-height:2">10번째 조각 → 앞 9개 다시 계산<br>11번째 조각 → 앞 10개 다시 계산<br><b style="color:var(--warn)">… 대화가 길수록 눈덩이처럼 폭증</b></div>
+  </div></div>
+  <div class="col"><div class="card" style="height:100%;border-color:#9fdcc0;background:#f6fdf9"><h3 style="color:var(--good)">저장하면 (KV 캐시)</h3>
+   <p style="font-size:16px;margin-top:4px">앞 단어의 계산 결과(‘키·값’)를 <b>메모장에 적어두고</b> 재사용 → 새 조각 1개만 계산하면 끝.</p>
+   <div style="margin-top:12px;font-size:15px;line-height:2">앞 단어 결과 = <b>이미 메모장에</b><br>새 조각 → 메모장 보고 1번만 계산<br><b style="color:var(--good)">훨씬 빠름 — 대신 메모장이 쌓임</b></div>
+  </div></div>
+ </div>
+ <div class="term" style="margin-top:16px"><b>맞바꿈(trade-off)</b> — 속도를 얻는 대신 <b>메모리를 씁니다</b>. 이 '메모장(KV 캐시)'은 대화가 길수록, 동시 사용자가 많을수록 계속 커져 수십 GB까지 갑니다. <span class="mut">(긴 대화가 느려지고 비싸지는 이유)</span></div>
+</section>
+
+<!-- 11b ATTENTION (why quadratic) -->
+<section class="slide">
+ <span class="tag">세 곳 ③ 자세히 · 데모</span>
+ <h2>③ <span class="em">어텐션</span> — 모든 단어가 서로를 본다</h2>
+ <p class="lead" style="margin:8px 0 14px">다음 말을 고르려면 각 단어가 <b>앞의 어떤 단어를 주목할지</b> 정해야 합니다. 단어를 클릭해 보세요 — 진할수록 많이 주목.</p>
+ <div class="row fill" style="align-items:center">
+  <div class="col">
+   <div class="demo attn">
+    <div class="label">문장 (클릭해 보세요)</div>
+    <div class="toks" id="atoks" style="font-size:24px;gap:10px;margin:10px 0 14px"></div>
+    <p class="big" id="amsg" style="font-size:18px;min-height:28px"></p>
+    <p class="hint" style="margin-top:8px">예: ‘은행’이 강가인지 돈 찾는 곳인지 — <b>‘돈’을 주목</b>해 뜻을 잡습니다.</p>
+   </div>
+  </div>
+  <div class="col" style="flex:0 0 380px">
+   <div class="demo">
+    <div class="label">그래서 길수록 비교가 폭증</div>
+    <p class="big" style="font-size:17px;margin-bottom:10px">단어 <b id="aqn" style="color:var(--accent)">6</b>개 → 비교 <b id="aqsq" style="color:var(--warn)">36</b>번 (모든 쌍)</p>
+    <input id="aqslider" type="range" min="2" max="24" value="6">
+    <div class="qgrid" id="aqgrid" style="margin-top:14px"></div>
+    <p class="hint" style="margin-top:12px">길이가 2배면 비교는 <b>4배</b>(제곱). 이게 ③번 <b>메모리 폭증</b>의 정체입니다.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 12 VRAM CALCULATOR -->
+<section class="slide">
+ <span class="tag">데모 · VRAM 계산기</span>
+ <h2>직접 계산해 보는 <span class="em">'GPU가 왜 부족한가'</span></h2>
+ <p class="lead" style="margin:6px 0 14px">손잡이를 움직여 보세요. 챗봇 하나에 RTX 4090이 몇 장 필요한지 바로 나옵니다.</p>
+ <div class="row fill">
+  <div class="col" style="flex:0 0 470px">
+   <div class="demo">
+    <div class="label">모델 크기 — <b id="vmp" style="color:var(--accent)">70</b>B (파라미터 수)</div>
+    <input id="vparams" type="range" min="1" max="405" value="70">
+    <div class="label" style="margin-top:14px">정밀도 (숫자 한 개를 몇 바이트로)</div>
+    <div class="ctrlrow" id="vprec" style="margin-top:4px"></div>
+    <div class="label" style="margin-top:14px">대화 길이 — <b id="vctxv" style="color:var(--accent)">8K</b> 토큰</div>
+    <input id="vctx" type="range" min="1" max="128" value="8">
+    <div class="label" style="margin-top:14px">동시 사용자 — <b id="vusrv" style="color:var(--accent)">1</b>명</div>
+    <input id="vusr" type="range" min="1" max="50" value="1">
+   </div>
+  </div>
+  <div class="col">
+   <div class="demo" style="height:100%">
+    <div class="label">필요한 VRAM</div>
+    <div style="font-size:54px;font-weight:900;color:var(--accent);line-height:1"><span id="vtotal">140</span> <span style="font-size:26px">GB</span></div>
+    <div style="margin:16px 0">
+     <div style="font-size:15px;font-weight:800;margin-bottom:4px">① 모델 가중치 <span id="vwlab" style="float:right;color:var(--mut)">140 GB</span></div>
+     <div class="meter" style="height:18px;margin-bottom:10px"><i id="vwbar" style="background:linear-gradient(90deg,#1746c4,#6f97f0)"></i></div>
+     <div style="font-size:15px;font-weight:800;margin-bottom:4px">② 대화 기억(KV) × 사용자 <span id="vklab" style="float:right;color:var(--mut)">0 GB</span></div>
+     <div class="meter" style="height:18px"><i id="vkbar" style="background:linear-gradient(90deg,#0e9f6e,#5fcf9e)"></i></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center">
+     <span style="font-size:18px;font-weight:700">RTX 4090(24GB) 기준</span><br>
+     <span style="font-size:40px;font-weight:900;color:var(--warn)"><span id="vgpu">6</span>장</span> <span class="mut">필요</span>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 12b QUANTIZATION -->
+<section class="slide">
+ <span class="tag">메모리 줄이기 · 양자화</span>
+ <h2><span class="em">양자화</span> — 숫자를 '대충' 저장해 메모리를 아낀다</h2>
+ <p class="lead" style="margin:8px 0 14px">모델은 수백억 개의 숫자(가중치) 덩어리. 이 숫자 <b>하나를 몇 자리까지 정밀하게</b> 저장하느냐가 용량을 좌우합니다.</p>
+ <div class="row fill">
+  <div class="col" style="flex:0 0 440px"><div class="demo" style="height:100%">
+   <div class="label">정밀도를 골라보세요 <span class="mut" style="text-transform:none;font-weight:600">(비유: 숫자를 몇 자리까지)</span></div>
+   <div class="ctrlrow" id="qzbtns" style="margin:8px 0 18px"></div>
+   <div class="label">가중치 숫자 하나를 이렇게 저장</div>
+   <div id="qznum" style="font-family:monospace;font-size:32px;font-weight:800;color:var(--accent-d);background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px">3.1415927</div>
+   <div class="label">메모리 사용량</div>
+   <div class="meter" style="height:28px"><i id="qzbar" style="width:100%;background:linear-gradient(90deg,#1746c4,#6f97f0)"></i></div>
+  </div></div>
+  <div class="col"><div class="demo" style="height:100%">
+   <div class="label">70B 모델 기준 필요 용량</div>
+   <div style="line-height:1"><span id="qzsize" style="font-size:52px;font-weight:900;color:var(--accent)">140</span> <span style="font-size:24px;font-weight:800">GB</span></div>
+   <p class="big" id="qzdesc" style="font-size:18px;margin-top:14px">16비트 — 원본. 가장 정밀하지만 가장 무겁습니다.</p>
+   <div class="term" style="margin-top:16px">핵심 — 정밀도를 낮추면 품질은 <b>아주 조금</b> 떨어지지만 메모리는 <b>확</b> 줄어, 더 싼 GPU·노트북에서도 돌릴 수 있습니다. <span class="mut">(VRAM 계산기의 '정밀도' 손잡이가 바로 이것)</span></div>
+  </div></div>
+ </div>
+</section>
+
+<!-- 13 efficiency / news -->
+<section class="slide">
+ <h2>그래서 요즘 업계가 <span class="em">매달리는 것</span></h2>
+ <p class="lead" style="margin:8px 0 18px">메모리가 곧 돈이고 전기입니다. 줄이는 모든 방법이 곧 경쟁력.</p>
+ <div class="three fill">
+  <div class="card"><h3>양자화 <span class="mut" style="font-size:14px;font-weight:700">(방금 봤죠)</span></h3><p style="font-size:18px">숫자 정밀도를 낮춰 메모리 절감. 16비트→4비트면 <b>1/4</b> — 가장 먼저 쓰는 방법.</p></div>
+  <div class="card"><h3>작은 모델 (sLM)</h3><p style="font-size:18px">꼭 거대 모델이 답은 아닙니다. <b>업무에 맞춘 작은 모델</b>이 더 싸고 빠를 때가 많습니다.</p></div>
+  <div class="card"><h3>전용 칩 · 데이터센터</h3><p style="font-size:18px">엔비디아 GPU 수요 폭발, 전력·냉각 비용 급증 → <b>'AI = 인프라 산업'</b>이 된 이유.</p></div>
+ </div>
+ <p class="big" style="margin-top:18px;max-width:1040px">중소기업 관점의 한 줄: <b>"가장 큰 모델"이 아니라 "내 문제에 맞는 가장 작은 모델"</b>을 고르는 것이 비용을 가른다.</p>
+</section>
+
+<!-- 14 RECAP + finale -->
+<section class="slide">
+ <div class="kick">2교시 정리 · 딱 세 줄</div>
+ <h2 style="margin:6px 0 18px">오늘 이것만 기억하세요</h2>
+ <div style="display:flex;flex-direction:column;gap:13px">
+  <div class="takeaway"><div class="n">1</div><div><p class="big"><b>글자 = 토큰(숫자). LLM = 초강력 자동완성.</b> 다음 한 조각을 확률로 찍는 일을 반복합니다. <span class="mut">한국어는 같은 말도 토큰을 더 써서 더 비쌉니다.</span></p></div></div>
+  <div class="takeaway"><div class="n">2</div><div><p class="big"><b>이해가 아니라 예측이라 그럴듯하게 틀린다(환각).</b> 그래서 근거 확인·검증이 필수입니다.</p></div></div>
+  <div class="takeaway"><div class="n">3</div><div><p class="big"><b>크고 길수록 메모리가 폭증한다.</b> 가중치+대화기억+제곱 비교 → 'GPU 품귀' 뉴스의 정체.</p></div></div>
+ </div>
+ <div class="fill"></div>
+ <div class="term" style="font-size:18px">한 문장 요약 — LLM은 <b>데이터로 배운 '다음 조각 예측기'</b>입니다. 강력하지만 확률이라 틀릴 수 있으니, <b>근거를 붙이고 검증하며</b> 쓰는 것이 핵심입니다.</div>
+</section>
+
+</div></div>
+
+<div id="hud"></div>
+<div id="nav"><button id="navp">←</button><button id="navn">→</button></div>
+
+<script>
+/* ---------- deck framework ---------- */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const bar=document.getElementById('bar'),hud=document.getElementById('hud');
+function show(i){cur=Math.max(0,Math.min(slides.length-1,i));
+ slides.forEach((s,k)=>s.classList.toggle('on',k===cur));
+ bar.style.width=(cur/(slides.length-1)*100)+'%';
+ hud.textContent=(cur+1)+' / '+slides.length;location.hash=cur;}
+function next(){show(cur+1);}function prev(){show(cur-1);}
+document.addEventListener('keydown',e=>{
+ if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
+ else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+ else if(e.key==='Home')show(0);else if(e.key==='End')show(slides.length-1);
+ else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}});
+document.getElementById('navn').onclick=next;document.getElementById('navp').onclick=prev;
+function fit(){const s=Math.min(window.innerWidth/1280,window.innerHeight/720);
+ document.getElementById('stage').style.transform='scale('+s+')';
+ document.getElementById('scaler').style.width=(1280*s)+'px';
+ document.getElementById('scaler').style.height=(720*s)+'px';}
+window.addEventListener('resize',fit);fit();
+show(location.hash?parseInt(location.hash.slice(1))||0:0);
+
+function hid(s){let h=7;for(const c of s)h=(h*131+c.charCodeAt(0))%48000;return h+1000;}
+const palette=['#e7eefc','#e9faef','#fff2e0','#f3e9fb','#e6f7fb','#fde9ef'];
+const palBord=['#bcd0f7','#9fdcc0','#f0c277','#cfa9e6','#9fd6e6','#eeb0c2'];
+
+/* ---------- DEMO: tokenizer ---------- */
+(function(){
+ const ex={
+  '카카오톡':{t:['카','카','오','톡'],note:'브랜드명도 음절로 쪼개집니다.'},
+  '나는 학교에 간다':{t:['나','는',' 학교','에',' 간다'],note:'한국어는 조사(는/에)나 어미가 따로 잘리는 경우가 많습니다.'},
+  'strawberry':{t:['str','aw','berry'],note:'영어 단어 하나도 자주 여러 조각으로 쪼개집니다. (이게 다음 장의 핵심!)'},
+  '품질 검사 자동화':{t:['품','질',' 검','사',' 자동','화'],note:'드문 한국어 조합은 거의 글자 단위까지 잘리기도 합니다.'},
+  '2025년 매출':{t:['202','5','년',' 매','출'],note:'숫자도 묶이거나 쪼개집니다 — 그래서 계산을 의외로 틀립니다.'}
+ };
+ const btns=document.getElementById('tkbtns'),toks=document.getElementById('tktoks'),ids=document.getElementById('tkids'),note=document.getElementById('tknote');
+ function render(key){const {t,note:nt}=ex[key];
+  toks.innerHTML='';ids.textContent='';
+  const order={};let ci=0;t.forEach(tok=>{if(!(tok in order))order[tok]=ci++;});
+  t.forEach((tok)=>{const idx=order[tok];const d=document.createElement('div');d.className='tok';
+   d.style.background=palette[idx%palette.length];d.style.borderColor=palBord[idx%palBord.length];
+   d.innerHTML=tok.replace(/ /g,'␣')+'<span class="id">#'+hid(tok)+'</span>';toks.appendChild(d);});
+  ids.textContent='[ '+t.map(x=>hid(x)).join(',  ')+' ]';
+  const counts={};t.forEach(x=>counts[x]=(counts[x]||0)+1);
+  const dup=Object.keys(counts).filter(k=>counts[k]>1);
+  const extra=dup.length?' <b style="color:var(--accent)">같은 조각 '+dup.map(d=>'‘'+d.replace(/ /g,'␣')+'’').join('·')+'은 같은 번호·색!</b>':' <span class="mut">같은 조각은 언제나 같은 번호를 받습니다.</span>';
+  note.innerHTML='토큰 <b>'+t.length+'개</b> · '+nt+extra;
+  [...btns.children].forEach(b=>b.classList.toggle('sel',b.dataset.k===key));
+ }
+ Object.keys(ex).forEach((k,i)=>{const b=document.createElement('button');b.className='btn';b.textContent=k;b.dataset.k=k;b.onclick=()=>render(k);btns.appendChild(b);});
+ render('카카오톡');
+})();
+
+/* ---------- strawberry letters ---------- */
+(function(){
+ const L=document.getElementById('sbletters'),T=document.getElementById('sbtoks');
+ 'strawberry'.split('').forEach(ch=>{const d=document.createElement('div');d.className='tok';
+  const isR=ch==='r';d.style.background=isR?'#ffe0e0':'#eef3fb';d.style.borderColor=isR?'#e8590c':'#d9e0ec';
+  if(isR)d.style.color='#e8590c';d.textContent=ch;L.appendChild(d);});
+ [['str',1],['aw',0],['berry',1]].forEach(([tok,hasR],i)=>{const d=document.createElement('div');d.className='tok';
+  d.style.background=palette[i];d.style.borderColor=palBord[i];d.style.fontSize='22px';
+  d.innerHTML=tok+'<span class="id">#'+hid(tok)+'</span>';T.appendChild(d);});
+})();
+
+/* ---------- DEMO: next-token ---------- */
+(function(){
+ const NT={
+  '점심에':[['나는',30],['친구와',22],['뭘',16],['국밥을',12],['갑자기',10],['혼자',10]],
+  '나는':[['밥을',30],['친구를',17],['너무',14],['국밥을',12],['갑자기',10],['혼자',9],['김치찌개가',8]],
+  '혼자':[['밥을',40],['점심을',28],['조용히',18],['라면을',14]],
+  '국밥을':[['먹었다',56],['먹으러',22],['시켰다',14],['비웠다',8]],
+  '친구와':[['함께',41],['같이',22],['점심을',16],['영화를',12],['수다를',9]],
+  '점심을':[['먹었다',52],['먹으러',24],['때웠다',14]],
+  '라면을':[['끓였다',54],['먹었다',30]],
+  '오후엔':[['낮잠을',34],['커피를',26],['산책을',22],['회의가',18]],
+  '산책을':[['했다',62],['나갔다',24]],'회의가':[['있었다',60],['많았다',24]],
+  '조용히':[['먹었다',46],['쉬었다',30],['앉았다',16]],
+  '졸음이':[['쏟아졌다',60],['밀려왔다',28]],'전화가':[['왔다',64],['울렸다',24]],
+  '수다를':[['떨었다',70],['떨며',18]],'같이':[['먹었다',40],['갔다',30],['봤다',16]],
+  '함께':[['밥을',32],['영화를',24],['시간을',18],['여행을',14],['커피를',12]],
+  '밥을':[['먹었다',51],['먹으러',20],['먹고',16],['지었다',7],['안',6]],
+  '먹었다':[['.',40],['그리고',22],['너무',16],['배가',12],['덕분에',10]],
+  '그리고':[['커피를',26],['바로',22],['친구와',20],['오후엔',18],['낮잠을',14]],
+  '낮잠을':[['잤다',58],['청했다',24],['잠깐',18]],
+  '잤다':[['.',80],['다',20]],'청했다':[['.',80],['다',20]],'마셨다':[['.',80],['다',20]],
+  '친구를':[['만났다',52],['불렀다',24],['기다렸다',18]],
+  '만났다':[['.',78],['다',22]],
+  '너무':[['배가',36],['맛있어서',30],['졸렸다',20],['많이',14]],
+  '배가':[['불렀다',64],['고팠다',30]],'불렀다':[['.',85],['다',15]],
+  '갑자기':[['비가',34],['배가',26],['졸음이',24],['전화가',16]],
+  '비가':[['왔다',66],['쏟아졌다',24]],'왔다':[['.',85],['다',15]],
+  '커피를':[['마셨다',54],['마시며',22],['샀다',14],['내렸다',10]],
+  '먹으러':[['갔다',55],['갔어요',21],['나갔다',14],['간다',10]],
+  '영화를':[['봤다',48],['보러',25],['보고',16],['예매했다',11]],
+  '보러':[['갔다',60],['갔어요',22],['나섰다',12]],
+  '커피를':[['마셨다',54],['마시며',22],['샀다',14],['내렸다',10]],
+  '시간을':[['보냈다',50],['보내며',24],['가졌다',16]],
+  '뭘':[['먹을지',46],['할지',30],['먹지',14]],
+  '먹을지':[['고민했다',52],['정했다',24],['물었다',14]],
+ };
+ const FALLBACK=[['.',72],['그리고',12],['그래서',9],['하지만',7]];
+ const START=['오늘','점심에'];
+ let hist=START.slice();
+ const gen=document.getElementById('ntgen'),barsEl=document.getElementById('ntbars');
+ function cands(){const last=hist[hist.length-1];let c=NT[last]||FALLBACK;
+  const tot=c.reduce((a,b)=>a+b[1],0);return c.map(([w,p])=>[w,p/tot]);}
+ function renderGen(){gen.innerHTML=hist.join(' ')+' <span class="cur">▮</span>';}
+ function renderBars(){const c=cands();barsEl.innerHTML='';
+  c.forEach(([w,p])=>{const row=document.createElement('div');row.className='brow';
+   row.innerHTML='<div class="w">'+w+'</div><div class="track"><i style="width:'+(p*100)+'%"></i></div><div class="pct">'+Math.round(p*100)+'%</div>';
+   row.onclick=()=>{hist.push(w);if(hist.length>14)hist=hist.slice(-14);renderGen();renderBars();};
+   barsEl.appendChild(row);});}
+ const info=document.getElementById('ntinfo');
+ const CAP=10;
+ let timer=null;
+ function stopAuto(){if(timer){clearInterval(timer);timer=null;document.getElementById('ntauto').textContent='자동으로 ▶▶';}}
+ function stepOnce(){
+  // 문장이 끝났거나(마침표) 너무 길어지면 → 처음부터 다시 (비전 필터처럼 루프)
+  if(hist[hist.length-1]==='.'||hist.length>=CAP){
+   hist=START.slice();renderGen();renderBars();
+   info.innerHTML='문장 완성 — <b>처음부터</b> 다시 이어갑니다.';return;}
+  // 확률대로 무작위 추출 (한 조각씩·자동 모두 동일 방식)
+  const c=cands();let r=Math.random(),acc=0,pick=c[0][0],pp=c[0][1];
+  for(const [w,p] of c){acc+=p;if(r<=acc){pick=w;pp=p;break;}}
+  hist.push(pick);renderGen();renderBars();
+  info.innerHTML='방금 고른 조각: <b style="color:var(--accent)">'+pick+'</b> <span class="mut">— 확률 '+Math.round(pp*100)+'%로 뽑힘. 확률대로 고르니 같은 자리도 매번 달라집니다.</span>';}
+ document.getElementById('ntstep').onclick=()=>{stopAuto();stepOnce();};
+ document.getElementById('ntreset').onclick=()=>{stopAuto();hist=START.slice();renderGen();renderBars();info.innerHTML='‘한 조각씩 ▶’ 은 한 단계씩, ‘자동 ▶▶’ 은 쭉 — <b>둘 다 확률대로</b> 고릅니다. 같은 시작도 매번 다른 문장!';};
+ document.getElementById('ntauto').onclick=function(){
+  if(timer){stopAuto();return;}
+  this.textContent='■ 멈춤';
+  timer=setInterval(()=>stepOnce(),650);};
+ renderGen();renderBars();
+})();
+
+/* ---------- DEMO: KO vs EN token economy (real GPT-4o tokenizer) ---------- */
+(function(){
+ const PAIRS=[
+  {en:'Predictive maintenance reduces downtime.',
+   ent:['Predict','ive',' maintenance',' reduces',' downtime','.'],
+   ko:'예측 정비로 가동 중단을 줄입니다.',
+   kot:['예','측',' 정','비','로',' 가','동',' 중','단','을',' 줄','입니다','.']},
+  {en:'Automated inspection detects defects.',
+   ent:['Autom','ated',' inspection',' detects',' defects','.'],
+   ko:'자동 검사가 불량을 잡아냅니다.',
+   kot:['자동',' 검','사가',' 불','량','을',' 잡','아','냅니다','.']}
+ ];
+ const labels=['예지보전','자동 검사'];
+ const btns=document.getElementById('tebtns');
+ const enC=document.getElementById('teen'),koC=document.getElementById('teko');
+ function chips(cont,arr,pal){cont.innerHTML='';arr.forEach((t,i)=>{const d=document.createElement('div');d.className='tok';
+  d.style.background=pal[i%pal.length];d.style.borderColor='#d9e0ec';d.style.fontSize='17px';d.style.padding='5px 9px';
+  d.textContent=t.replace(/ /g,'␣');cont.appendChild(d);});}
+ function render(k){const p=PAIRS[k];
+  document.getElementById('teen_s').textContent='"'+p.en+'"';
+  document.getElementById('teko_s').textContent='"'+p.ko+'"';
+  chips(enC,p.ent,['#e7eefc','#e9faef','#e6f7fb']);
+  chips(koC,p.kot,['#fff2e0','#fde9ef','#f3e9fb']);
+  document.getElementById('teen_n').textContent=p.ent.length;
+  document.getElementById('teko_n').textContent=p.kot.length;
+  document.getElementById('teratio').textContent=(p.kot.length/p.ent.length).toFixed(1)+'배';
+  [...btns.children].forEach((b,i)=>b.classList.toggle('sel',i===k));}
+ labels.forEach((l,i)=>{const b=document.createElement('button');b.className='btn';b.textContent=l;b.onclick=()=>render(i);btns.appendChild(b);});
+ render(0);
+})();
+
+/* ---------- DEMO: temperature ---------- */
+(function(){
+ const words=[['날았다',3.4],['가로질렀다',2.3],['날아올랐다',2.1],['맴돌았다',1.6],['덮었다',1.0],['헤엄쳤다',0.4],['폭발했다',-0.1]];
+ const sl=document.getElementById('tpslider'),val=document.getElementById('tpval'),barsEl=document.getElementById('tpbars'),
+  out=document.getElementById('tpout'),msg=document.getElementById('tpmsg');
+ function probs(T){const ex=words.map(([w,l])=>[w,Math.exp(l/T)]);const s=ex.reduce((a,b)=>a+b[1],0);
+  return ex.map(([w,e])=>[w,e/s]);}
+ function render(){const T=+sl.value/100;val.textContent=T.toFixed(2);
+  const p=probs(T);barsEl.innerHTML='';
+  p.forEach(([w,pr])=>{const row=document.createElement('div');row.className='brow';
+   row.innerHTML='<div class="w">'+w+'</div><div class="track"><i style="width:'+(pr*100)+'%"></i></div><div class="pct">'+Math.round(pr*100)+'%</div>';
+   barsEl.appendChild(row);});
+  if(T<0.5)msg.textContent='낮은 온도 → 거의 항상 1등만. 안전하지만 뻔하고 반복적.';
+  else if(T<1.05)msg.textContent='중간 온도 → 자연스러운 다양성. 대부분 여기를 씁니다.';
+  else msg.textContent='높은 온도 → 꼴찌 후보까지 튀어나옴. 창의적이지만 헛소리 위험.';}
+ sl.oninput=()=>{render();};
+ const histEl=document.getElementById('tphist');const hist=[];let spinning=false;
+ const btn=document.getElementById('tpsample');
+ btn.onclick=()=>{
+  if(spinning)return;spinning=true;
+  const T=+sl.value/100;const p=probs(T);
+  let r=Math.random(),acc=0,pi=p.length-1;
+  for(let i=0;i<p.length;i++){acc+=p[i][1];if(r<=acc){pi=i;break;}}
+  const rows=[...barsEl.children];const steps=rows.length*2+pi;let i=0;
+  out.innerHTML='새가 하늘을 <b style="color:var(--accent)">…</b>';
+  function tick(){
+   rows.forEach(x=>x.classList.remove('spin'));
+   rows[i%rows.length].classList.add('spin');
+   if(i>=steps){settle();return;}
+   i++;setTimeout(tick,42+Math.max(0,i-(steps-6))*40);
+  }
+  function settle(){
+   rows.forEach(x=>x.classList.remove('spin'));
+   rows[pi].classList.add('hit');setTimeout(()=>{const rr=barsEl.children[pi];if(rr)rr.classList.remove('hit');},1000);
+   const w=p[pi][0];out.innerHTML='새가 하늘을 <b style="color:var(--accent)">'+w+'</b>';
+   hist.unshift(w);if(hist.length>7)hist.pop();
+   histEl.innerHTML=hist.map((x,idx)=>'<span class="chip"'+(idx===0?' style="background:var(--accent);color:#fff"':'')+'>'+x+'</span>').join('');
+   spinning=false;
+  }
+  tick();
+ };
+ render();
+})();
+
+/* ---------- DEMO: attention ---------- */
+(function(){
+ const toks=['그는','은행','에서','돈','을','찾았다'];
+ const W={5:[0.05,0.30,0.03,0.42,0.10,0.10],3:[0.10,0.34,0.04,0.40,0.07,0.05],
+  1:[0.05,0.33,0.05,0.42,0.05,0.10],0:[0.45,0.15,0.05,0.20,0.05,0.10],
+  2:[0.05,0.45,0.20,0.18,0.07,0.05],4:[0.05,0.10,0.05,0.55,0.20,0.05]};
+ const cont=document.getElementById('atoks'),msg=document.getElementById('amsg');
+ const els=toks.map((t,i)=>{const d=document.createElement('div');d.className='tok';d.textContent=t;
+  d.dataset.i=i;d.style.background='#eef3fb';d.style.borderColor='#d9e0ec';
+  d.onclick=()=>sel(i);cont.appendChild(d);return d;});
+ function sel(q){const w=W[q];els.forEach((e,i)=>{const a=w[i];
+   e.style.background='rgba(23,70,196,'+(0.08+a*0.92)+')';e.style.color=a>0.4?'#fff':'#0e1622';
+   e.style.borderColor=i===q?'#e8590c':'#d9e0ec';e.style.borderWidth=i===q?'2px':'1px';});
+  const top=w.map((a,i)=>[toks[i],a]).filter((_,i)=>i!==q).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]);
+  msg.innerHTML='‘<b style="color:var(--accent)">'+toks[q]+'</b>’ → <b>'+top.join('</b>, <b>')+'</b> 을(를) 가장 많이 주목합니다.';}
+ sel(5);
+ // quadratic grid
+ const sl=document.getElementById('aqslider'),qn=document.getElementById('aqn'),qsq=document.getElementById('aqsq'),grid=document.getElementById('aqgrid');
+ function gren(){const n=+sl.value;qn.textContent=n;qsq.textContent=n*n;
+  grid.style.gridTemplateColumns='repeat('+n+',1fr)';grid.innerHTML='';
+  const cap=Math.min(n*n,576);for(let i=0;i<cap;i++){const s=document.createElement('span');grid.appendChild(s);}}
+ sl.oninput=gren;gren();
+})();
+
+/* ---------- DEMO: VRAM calculator ---------- */
+(function(){
+ // anchors: paramsB -> [layers, hidden]
+ const anchors=[[1,16,2048],[7,32,4096],[13,40,5120],[34,48,7168],[70,80,8192],[175,96,12288],[405,126,16384]];
+ function arch(pB){let a=anchors[0],b=anchors[anchors.length-1];
+  for(let i=0;i<anchors.length-1;i++){if(pB>=anchors[i][0]&&pB<=anchors[i+1][0]){a=anchors[i];b=anchors[i+1];break;}}
+  const t=(pB-a[0])/Math.max(1,(b[0]-a[0]));return [Math.round(a[1]+(b[1]-a[1])*t),Math.round(a[2]+(b[2]-a[2])*t)];}
+ const vp=document.getElementById('vparams'),vmp=document.getElementById('vmp'),
+  vctx=document.getElementById('vctx'),vctxv=document.getElementById('vctxv'),
+  vusr=document.getElementById('vusr'),vusrv=document.getElementById('vusrv'),
+  vprec=document.getElementById('vprec'),
+  vtotal=document.getElementById('vtotal'),vgpu=document.getElementById('vgpu'),
+  vwlab=document.getElementById('vwlab'),vklab=document.getElementById('vklab'),
+  vwbar=document.getElementById('vwbar'),vkbar=document.getElementById('vkbar');
+ let bytes=2;
+ const precs=[['16비트',2],['8비트',1],['4비트',0.5]];
+ precs.forEach(([n,b],i)=>{const bt=document.createElement('button');bt.className='btn'+(i===0?' sel':'');bt.textContent=n;
+  bt.onclick=()=>{bytes=b;[...vprec.children].forEach(x=>x.classList.remove('sel'));bt.classList.add('sel');calc();};vprec.appendChild(bt);});
+ function calc(){const pB=+vp.value,ctxK=+vctx.value,users=+vusr.value;
+  vmp.textContent=pB;vctxv.textContent=ctxK+'K';vusrv.textContent=users;
+  const [layers,hidden]=arch(pB);
+  const weights=pB*bytes; // GB  (pB billion * bytes / 1e9*1e9)
+  const kvPerTokenGB=2*layers*hidden*bytes/1e9; // GB per token
+  const kv=kvPerTokenGB*ctxK*1000*users;
+  const overhead=1.5;
+  const total=weights+kv+overhead;
+  vtotal.textContent=Math.round(total);
+  vwlab.textContent=Math.round(weights)+' GB';vklab.textContent=Math.round(kv)+' GB';
+  const mx=Math.max(weights,kv,1);
+  vwbar.style.width=(weights/mx*100)+'%';vkbar.style.width=(kv/mx*100)+'%';
+  vgpu.textContent=Math.max(1,Math.ceil(total/24));}
+ [vp,vctx,vusr].forEach(el=>el.oninput=calc);calc();
+})();
+
+/* ---------- DEMO: quantization ---------- */
+(function(){
+ const OPT=[
+  ['16비트','3.1415927',100,140,'16비트 — 원본. 가장 정밀하지만 가장 무겁습니다.'],
+  ['8비트','3.14159',50,70,'8비트 — 거의 그대로인데 용량은 절반으로.'],
+  ['4비트','3.14',25,35,'4비트 — 살짝 거칠어도 대부분 문제없고, 용량은 1/4로.']
+ ];
+ const btns=document.getElementById('qzbtns');
+ if(!btns)return;
+ function render(i){const [n,num,pct,size,desc]=OPT[i];
+  document.getElementById('qznum').textContent=num;
+  document.getElementById('qzbar').style.width=pct+'%';
+  document.getElementById('qzsize').textContent=size;
+  document.getElementById('qzdesc').textContent=desc;
+  [...btns.children].forEach((b,k)=>b.classList.toggle('sel',k===i));}
+ OPT.forEach(([n],i)=>{const b=document.createElement('button');b.className='btn'+(i===0?' sel':'');b.textContent=n;b.onclick=()=>render(i);btns.appendChild(b);});
+ render(0);
+})();
+</script>
+</body></html>
