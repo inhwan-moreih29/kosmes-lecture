@@ -5,7 +5,11 @@ description = "2교시 - 비전 모델 영상 추론 교보재 앱 (PySide6 + on
 requires-python = ">=3.11"
 dependencies = [
     "pyside6>=6.7.0",
-    "onnxruntime>=1.18.0", # torch 미포함 -> 패키징 경량
+    # torch 미포함 -> 패키징 경량. onnxruntime 과 onnxruntime-directml 은
+    # import 명이 같고(onnxruntime) 동시 설치가 불가하므로 플랫폼으로 분기한다.
+    #   Windows -> DirectML(GPU) 빌드, 그 외(Mac/Linux dev) -> 기본 CPU 빌드.
+    "onnxruntime-directml>=1.18.0; platform_system == 'Windows'",
+    "onnxruntime>=1.18.0; platform_system != 'Windows'",
     "opencv-python>=4.10.0",
     "numpy>=1.26.0",
     "pyqtdarktheme>=2.1.0",

@@ -67,11 +67,31 @@ def _nms(boxes_cxcywh, scores, iou_thr: float):
     return np.array(keep, dtype=np.int32)
 
 
+def _make_session(onnx_path: str) -> ort.InferenceSession:
+    """가용 프로바이더를 감지해 세션 생성.
+
+    우선순위: DirectML(GPU) > CPU. OS 분기 없이 런타임에 결정한다.
+      - Mac(dev): onnxruntime CPU 패키지 -> DML 미가용 -> CPU 로 폴백.
+      - Windows: onnxruntime-directml 패키지 -> DmlExecutionProvider 로 GPU 가속.
+    프로바이더 리스트는 "선호 순서"이며, 앞의 것이 실패하면 뒤로 폴백한다.
+    """
+    available = ort.get_available_providers()
+    opts = ort.SessionOptions()
+    providers: list[str] = []
+    if "DmlExecutionProvider" in available:
+        # DirectML EP 는 메모리 패턴/병렬 실행을 지원하지 않는다(MS 권장 설정).
+        opts.enable_mem_pattern = False
+        opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+        providers.append("DmlExecutionProvider")
+    providers.append("CPUExecutionProvider")
+    return ort.InferenceSession(onnx_path, sess_options=opts, providers=providers)
+
+
 class Detector:
     def __init__(self, onnx_path: str, imgsz: int = 640):
-        self.sess = ort.InferenceSession(
-            onnx_path, providers=["CPUExecutionProvider"]
-        )
+        self.sess = _make_session(onnx_path)
+        # 실제 활성 프로바이더(폴백 결과 반영). UI/로그 표기용.
+        self.provider = self.sess.get_providers()[0]
         self.imgsz = imgsz
         self._input_name = self.sess.get_inputs()[0].name
         self._output_name = self.sess.get_outputs()[0].name
