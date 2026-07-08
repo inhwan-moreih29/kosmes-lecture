@@ -24,7 +24,7 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 WEIGHTS = HERE / "weights"
-RUNS = HERE / "runs"
+RUNS = HERE.parent / "outputs" / "model" / "runs"
 DATASETS = HERE / "datasets"
 
 # 증강 없음: 모든 증강 하이퍼파라미터 0 (순수 baseline)

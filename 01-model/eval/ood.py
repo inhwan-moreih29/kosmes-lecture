@@ -17,7 +17,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-OUT = HERE / "out" / "ood"
+OUT = ROOT.parent / "outputs" / "model" / "eval" / "ood"
 
 
 # ---------- OOD 변형들 (원본 분포에 없던 변화) ----------

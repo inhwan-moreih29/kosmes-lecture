@@ -10,7 +10,7 @@ from collections import defaultdict
 
 DOCS = Path(__file__).resolve().parent
 DECK = DOCS / "lesson1-theory-vision.html"
-RES = DOCS.parent / "01-model" / "experiments" / "results"
+RES = DOCS.parent / "outputs" / "experiments" / "results"
 
 # --- 원본 집계 ---
 agg = defaultdict(list)

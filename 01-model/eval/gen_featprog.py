@@ -42,7 +42,7 @@ from ultralytics.nn.tasks import DetectionModel
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 WEIGHTS = ROOT / "weights"
-OUT = HERE / "out" / "lesson_featprog"
+OUT = ROOT.parent / "outputs" / "model" / "eval" / "lesson_featprog"
 
 # 동일 이미지를 모든 단계에서 사용.
 # n10/n50/n100은 실제로 datasets/screw_detect로 학습되어 metal_nut 이미지에서는

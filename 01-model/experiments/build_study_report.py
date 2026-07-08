@@ -13,8 +13,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-RESULTS = HERE / "results"
-PLOTS = HERE / "plots"
+RESULTS = ROOT.parent / "outputs" / "experiments" / "results"
+PLOTS = ROOT.parent / "outputs" / "experiments" / "plots"
 REPORT = ROOT.parent / "docs" / "lesson1-study.html"
 SIZE_ORDER = ["n", "s", "m", "l"]
 

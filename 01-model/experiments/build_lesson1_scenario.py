@@ -13,8 +13,8 @@ import cv2
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent                       # 01-model
-PLOTS = HERE / "plots"
-EVAL = ROOT / "eval" / "out"
+PLOTS = ROOT.parent / "outputs" / "experiments" / "plots"
+EVAL = ROOT.parent / "outputs" / "model" / "eval"
 OUT = ROOT.parent / "docs" / "lesson1-scenario.html"
 MAXW = 1100                              # 임베드 최대 폭(다운스케일)
 

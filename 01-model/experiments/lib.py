@@ -17,8 +17,8 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent  # 01-model
-RUNS = HERE / "runs"
-RESULTS = HERE / "results"
+RUNS = ROOT.parent / "outputs" / "experiments" / "runs"
+RESULTS = ROOT.parent / "outputs" / "experiments" / "results"
 
 # 모든 증강 0 (순수 baseline)
 NOAUG = dict(

@@ -21,8 +21,8 @@ from ultralytics.nn.tasks import DetectionModel
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-WDIR = ROOT / "runs" / "nut_epochprog" / "weights"
-OUT = HERE / "out" / "lesson_epochprog"
+WDIR = ROOT.parent / "outputs" / "model" / "runs" / "nut_epochprog" / "weights"
+OUT = ROOT.parent / "outputs" / "model" / "eval" / "lesson_epochprog"
 VAL = ROOT / "datasets" / "metal_nut_detect" / "images" / "val"
 
 # 보여줄 에폭 단계 (파일 존재하는 것만 사용). e0 = 랜덤 초기화(학습 전).

@@ -48,7 +48,7 @@ def main():
         seed=SEED,
         deterministic=True,
         pretrained=False,
-        project=str(ROOT / "runs"),
+        project=str(ROOT.parent / "outputs" / "model" / "runs"),
         name="nut_epochprog",
         exist_ok=True,
         device=0,
@@ -57,7 +57,7 @@ def main():
         verbose=False,
         plots=True,
     )
-    wdir = ROOT / "runs" / "nut_epochprog" / "weights"
+    wdir = ROOT.parent / "outputs" / "model" / "runs" / "nut_epochprog" / "weights"
     print("saved checkpoints:", sorted(p.name for p in wdir.glob("*.pt")))
 
 if __name__ == "__main__":

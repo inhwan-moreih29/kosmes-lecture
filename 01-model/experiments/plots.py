@@ -23,8 +23,8 @@ for _f in ("NanumGothic", "Noto Sans CJK KR", "NanumBarunGothic"):
 plt.rcParams["axes.unicode_minus"] = False
 
 HERE = Path(__file__).resolve().parent
-RESULTS = HERE / "results"
-PLOTS = HERE / "plots"
+RESULTS = HERE.parent.parent / "outputs" / "experiments" / "results"
+PLOTS = HERE.parent.parent / "outputs" / "experiments" / "plots"
 SIZE_ORDER = ["n", "s", "m", "l"]
 SIZE_PARAMS = {"n": 2.6, "s": 9.4, "m": 20.0, "l": 25.3}  # M params (참고)
 

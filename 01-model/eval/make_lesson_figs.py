@@ -26,7 +26,7 @@ plt.rcParams["axes.unicode_minus"] = False
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 MSD = ROOT.parent / "data" / "MSD"
-OUT = HERE / "out" / "lesson"
+OUT = ROOT.parent / "outputs" / "model" / "eval" / "lesson"
 VAL2NAME = {38: "oil", 113: "scratch", 75: "stain"}
 COLORS = {"oil": "#1d4ed8", "scratch": "#c0152b", "stain": "#1d9e55"}
 

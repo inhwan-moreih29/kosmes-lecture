@@ -4,37 +4,27 @@ __pycache__/
 *.pyc
 .python-version
 
-# --- 학습 산출물 (용량 큼) ---
-01-model/runs/
-*.pt
-!01-model/weights/.gitkeep
+# --- 생성물 전부 여기 한 곳으로 (재생성 가능, 용량 큼) ---
+# outputs/model/{runs,eval,logs}  ·  outputs/experiments/{runs,plots,logs,results}  ·  outputs/app
+# 결론/보고서는 docs/ 에 보존
+outputs/
 
-# --- 1교시 생성물 (스크립트로 재생성 가능, 용량 큼) ---
-# datasets: mvtec_to_yolo.py 가 만드는 YOLO 변환본
-# eval/out: 추론/시각화 결과 이미지 (보고서는 docs/ 에 보존)
-# logs: 학습 로그
+# --- 학습 입력물 (스크립트로 재생성 가능, 용량 큼 · outputs 아님) ---
+# datasets: data/ 원본을 YOLO 형식으로 변환한 학습 입력 (yaml이 절대경로 참조 → 이동 금지)
 01-model/datasets/
-01-model/eval/out/
-01-model/logs/
-
-# --- 심화 실험(experiments/) 생성물 ---
-# 코드(*.py)만 추적, 출력물은 전부 무시(재생성 가능, 결론은 docs/ 보고서에 보존)
-# datasets: 병합셋, runs: 학습, plots: 그림, logs: stdout, results: 실험 출력 수치
 01-model/experiments/datasets/
-01-model/experiments/runs/
-01-model/experiments/plots/
-01-model/experiments/logs/
-01-model/experiments/results/
 
-# --- 모델 가중치 (onnx도 용량 커서 git 제외, 별도 보관) ---
+# --- 모델 가중치 (용량 커서 git 제외, 별도 보관) ---
+*.pt
 *.onnx
+!01-model/weights/.gitkeep
 !02-app/models/.gitkeep
 
 # --- PyInstaller 배포 산출물 ---
 02-app/build/
 02-app/dist/
 
-# --- 데이터 (이미 로컬 확보, git 추적 안 함) ---
+# --- 데이터 원본 (이미 로컬 확보, git 추적 안 함) ---
 data/
 
 # --- OS ---

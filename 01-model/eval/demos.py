@@ -17,7 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 WEIGHTS = ROOT / "weights"
 VAL = ROOT / "datasets" / "screw_detect" / "images" / "val"
-OUT = HERE / "out"
+OUT = ROOT.parent / "outputs" / "model" / "eval"
 
 
 def draw(img, result, color=(0, 200, 0), title=""):

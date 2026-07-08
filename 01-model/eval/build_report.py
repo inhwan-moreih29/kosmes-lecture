@@ -21,8 +21,8 @@ import cv2
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-RUNS = ROOT / "runs"
-OUT = HERE / "out"
+RUNS = ROOT.parent / "outputs" / "model" / "runs"
+OUT = ROOT.parent / "outputs" / "model" / "eval"
 REPORT = ROOT.parent / "docs" / "lesson1-experiment-report.html"
 
 GROUP_LABEL = {

@@ -10,7 +10,7 @@ from pathlib import Path
 
 DOCS = Path(__file__).resolve().parent
 DECK = DOCS / "lesson1-theory-vision.html"
-FEAT = DOCS.parent / "01-model" / "eval" / "out" / "lesson_epochprog"
+FEAT = DOCS.parent / "outputs" / "model" / "eval" / "lesson_epochprog"
 
 def b64(name):
     return "data:image/png;base64," + base64.b64encode((FEAT / name).read_bytes()).decode()
